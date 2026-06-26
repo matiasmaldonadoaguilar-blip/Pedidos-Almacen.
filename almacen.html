@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almacén — Pedidos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Almacén">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root {
+  --oro:#111111; --oro-c:#333333; --oro-op:#11111112;
+  --verde:#1A7A42; --verde-op:#1A7A4215;
+  --neg:#FAFAFA; --car:#FFFFFF; --car2:#F5F5F5; --car3:#EBEBEB;
+  --bor:#E0E0E0; --bor2:#BBBBBB;
+  --txt:#111111; --mut:#666666; --dim:#CCCCCC;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--neg);color:var(--txt);min-height:100vh}
+
+/* ── PANTALLAS ── */
+.pantalla{display:none;flex-direction:column;min-height:100vh;padding:28px 20px 40px}
+.pantalla.activa{display:flex}
+
+/* ── ORNAMENTOS ── */
+.orn{text-align:center;color:var(--oro);font-size:11px;letter-spacing:6px;text-transform:uppercase;opacity:.6;margin-bottom:6px}
+.titulo-pant{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--oro-c);letter-spacing:4px;text-transform:uppercase;text-align:center}
+.linea-oro{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--oro),transparent);margin:14px auto 0}
+.subtitulo{font-size:13px;color:var(--mut);margin-top:8px;letter-spacing:1px;font-style:italic;text-align:center}
+
+/* ── PANTALLA INICIO ── */
+#pantallaInicio{align-items:center;justify-content:center;background-image:radial-gradient(ellipse at 50% 0%,#11111108 0%,transparent 55%)}
+.inicio-logo{font-size:52px;margin-bottom:16px}
+.inicio-btns{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px;margin-top:36px}
+.inicio-btn{display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:6px;cursor:pointer;transition:all .2s;position:relative;width:100%}
+.inicio-btn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oro);transform:scaleY(0);transition:transform .2s;transform-origin:bottom;border-radius:3px 0 0 3px}
+.inicio-btn:active::before{transform:scaleY(1)}
+.inicio-btn:active{transform:scale(.97)}
+.ib-almacen{background:var(--oro);border:none}
+.ib-almacen:active{background:var(--oro-c)}
+.ib-administracion{background:var(--car2);border:1px solid var(--bor)}
+.ib-administracion:active{background:var(--car3)}
+.ib-icono{font-size:30px;flex-shrink:0}
+.ib-txt{flex:1;text-align:left}
+.ib-nombre{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:3px}
+.ib-almacen .ib-nombre{color:var(--neg)}
+.ib-administracion .ib-nombre{color:var(--oro-c)}
+.ib-desc{font-size:12px;opacity:.7;letter-spacing:.5px}
+.ib-almacen .ib-desc{color:var(--neg)}
+.ib-flecha{font-size:22px;opacity:.6}
+.ib-almacen .ib-flecha{color:var(--neg)}
+.ib-administracion .ib-flecha{color:var(--bor2)}
+
+/* ── PANTALLA ADMINISTRACIÓN ── */
+.suc-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:400px;margin:28px auto 0}
+.suc-btn{background:var(--car2);border:1px solid var(--bor);border-radius:8px;padding:22px 16px;cursor:pointer;transition:all .2s;text-align:center}
+.suc-btn:active{transform:scale(.96);background:var(--car3);border-color:var(--oro)}
+.suc-btn .sic{font-size:30px;display:block;margin-bottom:8px}
+.suc-btn .snm{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--oro-c);letter-spacing:2px;text-transform:uppercase}
+.suc-btn.general{grid-column:1/-1;background:var(--oro-op);border-color:var(--bor2)}
+.btn-volver{background:transparent;border:none;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:2px;cursor:pointer;padding:12px;text-transform:uppercase;transition:color .15s;margin-top:20px;align-self:center}
+.btn-volver:active{color:var(--oro)}
+
+/* ── PANTALLA CALENDARIO ── */
+.cal-header{text-align:center;margin-bottom:8px}
+.cal-suc-chip{display:inline-flex;align-items:center;gap:5px;background:var(--oro-op);border:1px solid var(--bor2);border-radius:20px;padding:3px 12px;margin-top:6px}
+.cal-suc-chip span{font-size:11px;color:var(--oro-c);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+/* Nav año */
+.cal-nav{display:flex;align-items:center;gap:14px;margin:10px 0 12px 4px}
+.cal-nav-btn{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:color .15s}
+.cal-nav-btn:active{color:var(--oro)}
+.cal-anio{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--oro);letter-spacing:1px;flex:1}
+/* Grilla 3 columnas */
+.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px}
+.cal-mes-box{padding:0}
+.cal-mes-nom{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:3px}
+.cal-mes-nom.tiene-datos{color:var(--oro-c)}
+.cal-dias-hdr{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:1px}
+.cal-dhdr{font-size:8px;color:var(--dim);text-align:center;font-weight:400}
+.cal-dias{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-d{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#888;cursor:default;position:relative;border-radius:50%}
+.cal-d.con-pedido{color:var(--neg);font-weight:700;cursor:pointer;background:var(--oro);border-radius:50%}
+.cal-d.con-pedido:active{opacity:.7}
+.cal-d.hoy{color:var(--txt);font-weight:600}
+.cal-d.vacio{visibility:hidden}
+/* Separador mes */
+.cal-mes-sep{height:1px;background:var(--bor);margin-top:5px;display:none}
+.cal-mes-box.tiene-datos .cal-mes-sep{display:block}
+/* Botón Excel mes — pequeño */
+.cal-mes-dl{margin-top:3px}
+.btn-mes-xl{width:100%;background:transparent;border:1px solid var(--verde);color:var(--verde);font-size:8px;letter-spacing:.3px;padding:2px 0;border-radius:3px;cursor:pointer;text-transform:uppercase}
+.btn-mes-xl:active{background:var(--verde-op)}
+/* Modal */
+.cal-overlay{position:fixed;inset:0;background:#00000099;z-index:500;display:flex;align-items:flex-end;justify-content:center;padding:0}
+.cal-modal{background:var(--car2);border:1px solid var(--bor);border-top-left-radius:20px;border-top-right-radius:20px;border-bottom-left-radius:0;border-bottom-right-radius:0;padding:20px 24px 36px;width:100%;max-width:480px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cal-modal-handle{width:36px;height:4px;background:var(--bor2);border-radius:2px;margin:0 auto 16px}
+.cal-modal-fecha{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--oro-c);line-height:1}
+.cal-modal-sub{font-size:13px;color:var(--mut);letter-spacing:1px;margin:3px 0 14px}
+.cal-modal-info{font-size:14px;color:var(--txt);padding:10px 12px;background:var(--car);border-radius:8px;border:1px solid var(--bor);margin-bottom:14px}
+.btn-dl-dia{width:100%;padding:15px;background:var(--oro);color:var(--neg);border:none;border-radius:10px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.btn-dl-dia:active{background:var(--oro-c)}
+.btn-modal-close{width:100%;padding:12px;background:transparent;color:var(--mut);border:1px solid var(--bor);border-radius:10px;font-size:13px;cursor:pointer;letter-spacing:1px;text-transform:uppercase}
+.cal-vacio{text-align:center;padding:40px 20px;color:var(--mut);font-style:italic}
+
+/* ── APP HEADER ── */
+.app-back{display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;background:transparent;border:none;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:color .15s;padding:0}
+.app-back:active{color:var(--oro)}
+header{text-align:center;margin-bottom:20px}
+header h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--oro-c);letter-spacing:4px;text-transform:uppercase}
+header::after{content:'';display:block;width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--oro),transparent);margin:12px auto 0}
+#subtitulo{font-size:13px;color:var(--mut);margin-top:6px;letter-spacing:1px;font-style:italic}
+
+/* ── FILTROS ── */
+.filtros{display:flex;gap:8px;margin-bottom:20px}
+.filtro-btn{flex:1;padding:9px 6px;border:1px solid var(--bor);background:transparent;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;text-align:center}
+.filtro-btn.activo{border-color:var(--oro);color:var(--oro);background:var(--oro-op);font-weight:700}
+.cbadge{display:inline-flex;align-items:center;justify-content:center;background:#8B3A3A;color:#F5C0C0;border-radius:50%;width:17px;height:17px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle}
+
+/* ── CARDS ── */
+.pedidos-lista{display:flex;flex-direction:column;gap:14px}
+.pedido-card{background:var(--car2);border:1px solid var(--bor);border-radius:6px;padding:18px;position:relative;overflow:hidden;animation:aparecer .3s ease}
+@keyframes aparecer{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.pedido-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--oro),transparent)}
+.pedido-card.completado-card::before{background:linear-gradient(90deg,transparent,var(--verde),transparent)}
+.pedido-card.completado-card{opacity:.75}
+.pedido-header{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bor)}
+.pedido-header-top{display:flex;justify-content:space-between;align-items:center}
+.pedido-hora{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.pedido-sucursal{display:inline-flex;align-items:center;gap:6px;background:var(--oro-op);border:1px solid var(--bor2);border-radius:3px;padding:4px 10px;font-family:'Playfair Display',serif;font-size:12px;color:var(--oro-c);font-weight:700;letter-spacing:2px;text-transform:uppercase;align-self:flex-start}
+.badge{font-family:'Cormorant Garamond',serif;font-size:11px;padding:3px 10px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;font-weight:500}
+.badge.pendiente{background:#11111118;color:var(--oro);border:1px solid #11111144}
+.badge.entregado{background:#1A7A4218;color:var(--verde);border:1px solid #1A7A4244}
+.badge.completado-b{background:#2563eb18;color:#7EB3FF;border:1px solid #2563eb44}
+
+/* ── PROGRESO ── */
+.prog-wrap{margin-bottom:12px}
+.prog-txt{font-size:12px;color:var(--mut);letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between}
+.prog-bg{height:2px;background:var(--car3);border-radius:1px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--oro),var(--oro-c));border-radius:1px;transition:width .4s ease}
+
+/* ── ITEMS ── */
+.pedido-items{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.item-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--car);border:1px solid var(--bor);border-radius:3px;cursor:pointer;transition:all .2s;user-select:none}
+.item-row.no-click{cursor:default}
+.item-row:hover:not(.no-click){border-color:var(--bor2)}
+.item-row.tachado{opacity:.45;border-color:transparent}
+.item-check{width:22px;height:22px;border-radius:50%;border:1px solid var(--bor2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .2s;color:var(--neg)}
+.item-row.tachado .item-check{background:var(--oro);border-color:var(--oro)}
+.item-nombre{flex:1;font-size:15px;letter-spacing:.3px;transition:all .2s}
+.item-row.tachado .item-nombre{text-decoration:line-through;color:var(--mut)}
+.item-qty{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--oro);min-width:36px;text-align:right}
+.item-row.tachado .item-qty{color:var(--dim)}
+.item-nota-btn{flex-shrink:0;background:transparent;border:1px solid var(--bor2);color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:3px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.item-nota-btn.tiene-nota{background:var(--oro-op);border-color:var(--oro);color:var(--oro)}
+.item-nota-wrap{padding:6px 12px 8px;display:none;background:var(--car);border-left:1px solid var(--bor);border-right:1px solid var(--bor);border-bottom:1px solid var(--bor);border-radius:0 0 3px 3px;margin-top:-1px}
+.item-nota-wrap.visible{display:block}
+.item-nota-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--bor);color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:14px;outline:none;padding:4px 0;resize:none}
+.item-nota-input::placeholder{color:var(--dim);font-style:italic}
+.item-nota-input:focus{border-bottom-color:var(--oro)}
+
+/* ── NOTA GENERAL ── */
+.nota-texto{font-size:13px;color:var(--mut);background:var(--car);padding:8px 12px;border-radius:3px;margin-bottom:12px;border-left:2px solid var(--oro);font-style:italic}
+
+/* ── NOMBRES CONFIRMADOS ── */
+.nombres-box{background:var(--car);border:1px solid var(--bor);border-radius:6px;padding:12px 14px;margin-bottom:12px}
+.nombre-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px}
+.nombre-row+.nombre-row{border-top:1px solid var(--bor);padding-top:8px;margin-top:4px}
+.nombre-lbl{font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;min-width:90px}
+.nombre-val{color:var(--oro-c);font-weight:600;font-family:'Playfair Display',serif}
+
+/* ── INPUTS ── */
+.nombre-wrap{margin-bottom:10px}
+.nombre-label{font-size:11px;color:var(--mut);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+.nombre-input{width:100%;background:var(--car);border:1px solid var(--bor);border-radius:6px;padding:11px 14px;color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:16px;outline:none;transition:border-color .2s}
+.nombre-input:focus{border-color:var(--oro)}
+.nombre-input::placeholder{color:var(--dim);font-style:italic}
+
+/* ── BOTONES ── */
+.acciones{display:flex;flex-direction:column;gap:8px}
+.btn-confirmar{width:100%;padding:13px;background:transparent;color:var(--oro);border:1px solid var(--oro);border-radius:4px;font-family:'Playfair Display',serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:3px;text-transform:uppercase;transition:all .2s;position:relative;overflow:hidden}
+.btn-confirmar::before{content:'';position:absolute;inset:0;background:var(--oro);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
+.btn-confirmar:hover:not(:disabled)::before{transform:scaleX(1)}
+.btn-confirmar:hover:not(:disabled){color:var(--neg)}
+.btn-confirmar span{position:relative;z-index:1}
+.btn-confirmar:disabled{border-color:var(--bor);color:var(--dim);cursor:not-allowed}
+.btn-confirmar:disabled::before{display:none}
+.btn-excel{width:100%;padding:11px;background:transparent;color:var(--verde);border:1px solid #1A7A4244;border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-excel:hover{background:var(--verde-op);border-color:var(--verde)}
+.btn-deshacer{width:100%;padding:10px;background:transparent;color:var(--dim);border:1px solid var(--dim);border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-deshacer:hover{color:var(--mut);border-color:var(--mut)}
+
+/* ── ENTREGAS SIMPLE ── */
+.entrega-simple{background:var(--car2);border:1px solid var(--bor);border-radius:6px;padding:16px 18px;display:flex;align-items:center;gap:12px;animation:aparecer .3s ease}
+.es-suc{font-family:'Playfair Display',serif;font-size:13px;color:var(--oro-c);font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block}
+.es-fecha{font-size:12px;color:var(--mut);letter-spacing:1px;margin-top:3px;display:block}
+.es-info{flex:1}
+.es-dl{background:transparent;border:1px solid var(--verde);color:var(--verde);font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:8px 14px;border-radius:4px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.es-dl:active{background:var(--verde-op)}
+
+/* ── SIN PEDIDOS ── */
+.sin-pedidos{text-align:center;padding:50px 20px;border:1px solid var(--bor);border-radius:4px;background:var(--car2)}
+.sin-pedidos .orn-v{font-size:26px;display:block;margin-bottom:12px;color:var(--bor2)}
+.sin-pedidos p{font-size:15px;color:var(--mut);font-style:italic}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--car2);border:1px solid var(--oro);color:var(--oro-c);padding:12px 28px;border-radius:4px;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:1px;transition:transform .3s ease;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- ══ PANTALLA INICIO ══ -->
+<div class="pantalla activa" id="pantallaInicio">
+  <div style="text-align:center">
+    <div class="inicio-logo">📦</div>
+    <div class="orn">✦ &nbsp; Sistema &nbsp; ✦</div>
+    <div class="titulo-pant">Almacén</div>
+    <div class="linea-oro"></div>
+  </div>
+  <div class="inicio-btns">
+    <button class="inicio-btn ib-almacen" id="btnIrAlmacen">
+      <span class="ib-icono">🏭</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Almacén</span>
+        <span class="ib-desc">Gestionar pedidos entrantes</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+    <button class="inicio-btn ib-administracion" id="btnIrAdministración">
+      <span class="ib-icono">📊</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Administración</span>
+        <span class="ib-desc">Historial y reportes por sucursal</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ PANTALLA APP ══ -->
+<div class="pantalla" id="pantallaApp">
+  <button class="app-back" id="btnAppBack">← Inicio</button>
+  <div class="orn">✦ &nbsp; Almacén &nbsp; ✦</div>
+  <header>
+    <h1>Almacén</h1>
+    <p id="subtitulo">Esperando pedidos...</p>
+  </header>
+  <div class="filtros">
+    <button class="filtro-btn activo" id="filtro-pedido" onclick="setFiltro('pedido')">
+      Pedido <span class="cbadge" id="countPedido">0</span>
+    </button>
+    <button class="filtro-btn" id="filtro-despachos" onclick="setFiltro('despachos')">
+      Despachos <span class="cbadge" id="countDespachos" style="display:none"></span>
+    </button>
+    <button class="filtro-btn" id="filtro-entregas" onclick="setFiltro('entregas')">
+      Entregas
+    </button>
+  </div>
+  <div class="pedidos-lista" id="pedidosLista">
+    <div class="sin-pedidos"><span class="orn-v">⏳</span><p>Conectando...</p></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA ADMINISTRACIÓN ══ -->
+<div class="pantalla" id="pantallaAdministración">
+  <button class="app-back" id="btnAdministraciónBack">← Inicio</button>
+  <div class="orn">✦ &nbsp; Administración &nbsp; ✦</div>
+  <div class="titulo-pant">Historial</div>
+  <div class="linea-oro"></div>
+  <p class="subtitulo" style="margin-top:10px">Seleccioná una sucursal</p>
+  <div class="suc-btns">
+    <button class="suc-btn" data-suc="Beni" data-ico="🌿">
+      <span class="sic">🌿</span><span class="snm">Beni</span>
+    </button>
+    <button class="suc-btn" data-suc="Alemana" data-ico="🏛️">
+      <span class="sic">🏛️</span><span class="snm">Alemana</span>
+    </button>
+    <button class="suc-btn" data-suc="Zoológico" data-ico="🦁">
+      <span class="sic">🦁</span><span class="snm">Zoológico</span>
+    </button>
+    <button class="suc-btn general" data-suc="GENERAL" data-ico="📊">
+      <span class="sic">📊</span><span class="snm">General</span>
+    </button>
+  </div>
+  <button class="btn-volver" id="btnAdministraciónVolver">← Volver</button>
+</div>
+
+<!-- ══ PANTALLA CALENDARIO ══ -->
+<div class="pantalla" id="pantallaCalendario">
+  <button class="app-back" id="btnCalBack">← Administración</button>
+  <div class="cal-header">
+    <div class="orn">✦ &nbsp; Historial &nbsp; ✦</div>
+    <div class="titulo-pant">Calendario</div>
+    <div class="cal-suc-chip">
+      <span id="calIco">📊</span>
+      <span id="calNom">—</span>
+    </div>
+  </div>
+  <div id="calBody">
+    <div class="cal-vacio">Cargando pedidos...</div>
+  </div>
+  <button class="btn-volver" id="btnCalVolver">← Volver</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyA_oHjATWDHDvSv7ztqPDfWJkXuLR9ceZs",
+  authDomain:"proyecto-2-bara.firebaseapp.com",
+  projectId:"proyecto-2-bara",
+  storageBucket:"proyecto-2-bara.firebasestorage.app",
+  messagingSenderId:"467039108962",
+  appId:"1:467039108962:web:e7eb55bd1e10eca09bf63b"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let pedidos      = [];
+let filtroActual = 'pedido';
+const tachados   = {};
+const notasItems = {};
+
+// ── NAVEGACIÓN ENTRE PANTALLAS ──
+function ir(id) {
+  document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+  document.getElementById(id).classList.add('activa');
+  window.scrollTo(0,0);
+}
+
+document.getElementById('btnIrAlmacen').addEventListener('click', () => ir('pantallaApp'));
+document.getElementById('btnIrAdministración').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnAppBack').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnAdministraciónBack').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnAdministraciónVolver').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnCalBack').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnCalVolver').addEventListener('click', () => ir('pantallaAdministración'));
+
+// ── SUCURSALES ADMINISTRACIÓN ──
+document.querySelectorAll('.suc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const suc = btn.dataset.suc;
+    const ico = btn.dataset.ico;
+    document.getElementById('calIco').textContent = ico;
+    document.getElementById('calNom').textContent = suc === 'GENERAL' ? 'Todas las sucursales' : suc;
+    ir('pantallaCalendario');
+    renderCalendario(suc);
+  });
+});
+
+// ── FILTROS APP ──
+window.setFiltro = function(f) {
+  filtroActual = f;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('filtro-' + f).classList.add('activo');
+  renderVista();
+};
+
+function formatHora(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'});
+}
+function formatFecha(ts) {
+  if (!ts) return new Date().toLocaleDateString('es-BO');
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('es-BO') + ' ' + d.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── RENDER VISTAS ──
+function renderVista() {
+  if (filtroActual === 'pedido')    renderPedido();
+  else if (filtroActual === 'despachos') renderDespachos();
+  else if (filtroActual === 'entregas')  renderEntregas();
+}
+
+// ── PEDIDO (pendiente) ──
+function renderPedido() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado === 'pendiente');
+  if (!items.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">✅</span><p>Sin pedidos pendientes</p></div>`; return; }
+  lista.innerHTML = items.map(p => buildCardPendiente(p)).join('');
+}
+
+function buildCardPendiente(p) {
+  if (!tachados[p.id]) tachados[p.id] = new Set();
+  if (!notasItems[p.id]) notasItems[p.id] = {};
+  const total = p.items.length;
+  const hechos = tachados[p.id].size;
+  const todos  = hechos === total;
+  const pct    = total > 0 ? Math.round((hechos/total)*100) : 0;
+  return `
+  <div class="pedido-card" id="card-${p.id}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${formatHora(p.timestamp)}</span>
+        <span class="badge pendiente">Pendiente</span>
+      </div>
+      <span class="pedido-sucursal">${p.sucursalIcono||'🏠'} ${p.sucursal||''}</span>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-txt"><span>Preparación</span><span>${hechos}/${total}</span></div>
+      <div class="prog-bg"><div class="prog-bar" style="width:${pct}%"></div></div>
+    </div>
+    <div class="pedido-items">
+      ${p.items.map((it,idx) => {
+        const nota = notasItems[p.id][idx]||'';
+        const tien = nota.length>0;
+        return `<div>
+          <div class="item-row ${tachados[p.id].has(idx)?'tachado':''}" onclick="toggleItem('${p.id}',${idx})">
+            <div class="item-check">${tachados[p.id].has(idx)?'✓':''}</div>
+            <span class="item-nombre">${it.nombre}</span>
+            <span class="item-qty">×${it.cantidad}</span>
+            <button class="item-nota-btn ${tien?'tiene-nota':''}" id="nBtn-${p.id}-${idx}"
+              onclick="event.stopPropagation();toggleNota('${p.id}',${idx})">${tien?'✎ Nota':'+ Nota'}</button>
+          </div>
+          <div class="item-nota-wrap ${tien?'visible':''}" id="nWrap-${p.id}-${idx}">
+            <textarea class="item-nota-input" rows="1" id="nInp-${p.id}-${idx}"
+              placeholder="Nota para este producto..."
+              oninput="guardarNota('${p.id}',${idx},this.value)">${nota}</textarea>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${p.nota?`<div class="nota-texto">📝 ${p.nota}</div>`:''}
+    <div class="acciones">
+      ${todos?`<div class="nombre-wrap">
+        <span class="nombre-label">Tu nombre — Entregué conforme</span>
+        <input type="text" class="nombre-input" id="nomEnt-${p.id}" placeholder="Escribí tu nombre..."/>
+      </div>`:''}
+      <button class="btn-confirmar" onclick="confirmarEntrega('${p.id}')" ${!todos?'disabled':''}>
+        <span>${todos?'Confirmar entrega':`Tachá todos los ítems (${hechos}/${total})`}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+window.toggleItem = function(pid, idx) {
+  if (!tachados[pid]) tachados[pid] = new Set();
+  tachados[pid].has(idx) ? tachados[pid].delete(idx) : tachados[pid].add(idx);
+  const el = document.getElementById('card-'+pid);
+  const p  = pedidos.find(x => x.id===pid);
+  if (el && p) el.outerHTML = buildCardPendiente(p);
+};
+
+window.toggleNota = function(pid, idx) {
+  const w = document.getElementById(`nWrap-${pid}-${idx}`);
+  const i = document.getElementById(`nInp-${pid}-${idx}`);
+  if (!w) return;
+  const v = w.classList.toggle('visible');
+  if (v && i) i.focus();
+};
+
+window.guardarNota = function(pid, idx, val) {
+  if (!notasItems[pid]) notasItems[pid] = {};
+  notasItems[pid][idx] = val;
+  const btn = document.getElementById(`nBtn-${pid}-${idx}`);
+  if (btn) { btn.textContent = val.trim()?'✎ Nota':'+ Nota'; btn.classList.toggle('tiene-nota', val.trim().length>0); }
+};
+
+window.confirmarEntrega = async function(pid) {
+  const input  = document.getElementById('nomEnt-'+pid);
+  const nombre = input ? input.value.trim() : '';
+  if (!nombre) { mostrarToast('Escribí tu nombre para confirmar'); return; }
+  const btn = document.querySelector(`#card-${pid} .btn-confirmar`);
+  if (btn) { btn.disabled=true; btn.querySelector('span').textContent='Confirmando...'; }
+  try {
+    const p = pedidos.find(x => x.id===pid);
+    const itemsConNota = p ? p.items.map((it,idx) => ({...it, notaAlmacen:(notasItems[pid]&&notasItems[pid][idx])||''})) : [];
+    await updateDoc(doc(db,'pedidos',pid), { estado:'entregado', entregadoPor:nombre, fechaEntrega:serverTimestamp(), items:itemsConNota });
+    mostrarToast('✦ Entrega confirmada — '+nombre);
+    setTimeout(()=>setFiltro('despachos'),800);
+  } catch(e) {
+    console.error(e); mostrarToast('Error al confirmar entrega');
+    if (btn) { btn.disabled=false; btn.querySelector('span').textContent='Confirmar entrega'; }
+  }
+};
+
+// ── DESPACHOS (entregado, esperando barra) ──
+function renderDespachos() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado==='entregado');
+  if (!items.length) { lista.innerHTML=`<div class="sin-pedidos"><span class="orn-v">✦</span><p>Sin despachos pendientes de confirmación</p></div>`; return; }
+  lista.innerHTML = items.map(p=>`
+  <div class="pedido-card" id="card-${p.id}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${formatHora(p.timestamp)}</span>
+        <span class="badge entregado">En espera de barra</span>
+      </div>
+      <span class="pedido-sucursal">${p.sucursalIcono||'🏠'} ${p.sucursal||''}</span>
+    </div>
+    <div class="pedido-items">
+      ${p.items.map(it=>`
+        <div class="item-row tachado no-click">
+          <div class="item-check">✓</div>
+          <span class="item-nombre">${it.nombre}</span>
+          <span class="item-qty">×${it.cantidad}</span>
+        </div>
+        ${it.notaAlmacen?`<div style="padding:4px 12px 6px;font-size:12px;color:var(--oro);font-style:italic;background:var(--car)">✎ ${it.notaAlmacen}</div>`:''}
+      `).join('')}
+    </div>
+    ${p.nota?`<div class="nota-texto">📝 ${p.nota}</div>`:''}
+    <div class="nombres-box">
+      <div class="nombre-row"><span class="nombre-lbl">Entregó:</span><span class="nombre-val">${p.entregadoPor||'—'}</span></div>
+      <div class="nombre-row"><span class="nombre-lbl">Esperando:</span><span style="color:var(--mut);font-style:italic;font-size:13px">Barra — ${p.sucursal||''}</span></div>
+    </div>
+    <div class="acciones">
+      <button class="btn-deshacer" onclick="deshacerEntrega('${p.id}')">↩ Deshacer entrega</button>
+    </div>
+  </div>`).join('');
+}
+
+window.deshacerEntrega = async function(id) {
+  if (tachados[id]) tachados[id].clear();
+  await updateDoc(doc(db,'pedidos',id), { estado:'pendiente', entregadoPor:'', fechaEntrega:null });
+};
+
+// ── ENTREGAS (completado) — solo sucursal + fecha + excel ──
+function renderEntregas() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado==='completado');
+  if (!items.length) { lista.innerHTML=`<div class="sin-pedidos"><span class="orn-v">📭</span><p>Sin entregas completadas</p></div>`; return; }
+  lista.innerHTML = items.map(p=>`
+  <div class="entrega-simple" id="card-${p.id}">
+    <div class="es-info">
+      <span class="es-suc">${p.sucursalIcono||'🏠'} ${p.sucursal||''}</span>
+      <span class="es-fecha">🕐 ${formatFecha(p.timestamp)}</span>
+      ${p.entregadoPor||p.recibidoPor?`<span style="font-size:11px;color:var(--mut);margin-top:4px;display:block;letter-spacing:1px">
+        ${p.entregadoPor?'Entregó: '+p.entregadoPor:''}${p.entregadoPor&&p.recibidoPor?' · ':''}${p.recibidoPor?'Recibió: '+p.recibidoPor:''}
+      </span>`:''}
+    </div>
+    <button class="es-dl" onclick="descargarExcel('${p.id}')">↓ Excel</button>
+  </div>`).join('');
+}
+
+// ── CONTADORES ──
+function actualizarContadores() {
+  const pend = pedidos.filter(p=>p.estado==='pendiente').length;
+  const desp = pedidos.filter(p=>p.estado==='entregado').length;
+  document.getElementById('countPedido').textContent = pend;
+  const cd = document.getElementById('countDespachos');
+  if (desp>0){cd.textContent=desp;cd.style.display='inline-flex';}else{cd.style.display='none';}
+  document.getElementById('subtitulo').textContent = pend>0?`${pend} pedido${pend>1?'s':''} en espera`:'Todo al día';
+}
+
+// ── CALENDARIO ──
+let calSucActual = '';
+let calAnioActual = new Date().getFullYear();
+let calDatos = {}; // {mesKey: {diaKey: [pedidos]}}
+
+function renderCalendario(sucursal) {
+  calSucActual = sucursal;
+  calAnioActual = new Date().getFullYear();
+  construirCalDatos();
+  dibujarCalendario();
+}
+
+function construirCalDatos() {
+  const filtrados = calSucActual==='GENERAL'
+    ? pedidos
+    : pedidos.filter(p => p.sucursal===calSucActual);
+  calDatos = {};
+  filtrados.forEach(p => {
+    if (!p.timestamp) return;
+    const d = p.timestamp.toDate ? p.timestamp.toDate() : new Date(p.timestamp);
+    const mesKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const diaKey = String(d.getDate()).padStart(2,'0');
+    if (!calDatos[mesKey]) calDatos[mesKey] = {};
+    if (!calDatos[mesKey][diaKey]) calDatos[mesKey][diaKey] = [];
+    calDatos[mesKey][diaKey].push(p);
+  });
+}
+
+function dibujarCalendario() {
+  const body  = document.getElementById('calBody');
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const DIAS  = ['L','M','X','J','V','S','D'];
+  const hoy   = new Date();
+
+  let html = `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="cambiarAnio(-1)">‹</button>
+      <span class="cal-anio">${calAnioActual}</span>
+      <button class="cal-nav-btn" onclick="cambiarAnio(1)">›</button>
+    </div>
+    <div class="cal-grid">`;
+
+  for (let m = 0; m < 12; m++) {
+    const mesKey  = `${calAnioActual}-${String(m+1).padStart(2,'0')}`;
+    const diasMes = calDatos[mesKey] || {};
+    const tienePedidos = Object.keys(diasMes).length > 0;
+
+    // Primer día del mes (0=Dom → ajustar a Lun=0)
+    const primerDia = new Date(calAnioActual, m, 1).getDay();
+    const offset    = primerDia === 0 ? 6 : primerDia - 1;
+    const totalDias = new Date(calAnioActual, m+1, 0).getDate();
+
+    let diasHTML = DIAS.map(d => `<div class="cal-dhdr">${d}</div>`).join('');
+    let celdas   = '';
+
+    // Celdas vacías al inicio
+    for (let i = 0; i < offset; i++) celdas += `<div class="cal-d vacio"></div>`;
+
+    for (let d = 1; d <= totalDias; d++) {
+      const dKey  = String(d).padStart(2,'0');
+      const tiene = !!diasMes[dKey];
+      const esHoy = hoy.getFullYear()===calAnioActual && hoy.getMonth()===m && hoy.getDate()===d;
+      const npeds = tiene ? diasMes[dKey].length : 0;
+      celdas += `<div class="cal-d${tiene?' con-pedido':''}${esHoy?' hoy':''}"
+        ${tiene?`onclick="abrirModalDia('${mesKey}','${dKey}')"`:''} 
+        title="${tiene?npeds+' pedido'+( npeds>1?'s':''):''}">
+        ${d}
+      </div>`;
+    }
+
+    html += `
+      <div class="cal-mes-box${tienePedidos?' tiene-datos':''}">
+        <div class="cal-mes-nom${tienePedidos?' tiene-datos':''}">${MESES[m]}</div>
+        <div class="cal-dias-hdr">${diasHTML}</div>
+        <div class="cal-dias">${celdas}</div>
+        ${tienePedidos ? `
+        <div class="cal-mes-dl">
+          <button class="btn-mes-xl" onclick="dlMes('${calSucActual}','${mesKey}')">↓ Excel del mes</button>
+        </div>` : ''}
+      </div>`;
+  }
+
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+window.cambiarAnio = function(delta) {
+  calAnioActual += delta;
+  dibujarCalendario();
+};
+
+window.abrirModalDia = function(mesKey, dia) {
+  const [anio, mes] = mesKey.split('-');
+  const diasData = calDatos[mesKey] && calDatos[mesKey][dia] ? calDatos[mesKey][dia] : [];
+  const MESES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const nomFecha = `${parseInt(dia)} de ${MESES_FULL[parseInt(mes)-1]} ${anio}`;
+  const npeds = diasData.length;
+  const nitems = diasData.reduce((s,p)=>s+p.items.reduce((ss,it)=>ss+it.cantidad,0),0);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cal-overlay';
+  overlay.id = 'calOverlay';
+  overlay.innerHTML = `
+    <div class="cal-modal">
+      <div class="cal-modal-fecha">${parseInt(dia)}</div>
+      <div class="cal-modal-sub">${nomFecha}</div>
+      <div class="cal-modal-info">
+        ${npeds} pedido${npeds>1?'s':''} · ${nitems} unidades totales
+      </div>
+      <button class="btn-dl-dia" onclick="dlDia('${calSucActual}','${mesKey}','${dia}');cerrarModalDia()">
+        ↓ Descargar Excel del día
+      </button>
+      <button class="btn-modal-close" onclick="cerrarModalDia()">Cerrar</button>
+    </div>`;
+  overlay.addEventListener('click', e => { if(e.target===overlay) cerrarModalDia(); });
+  document.body.appendChild(overlay);
+};
+
+window.cerrarModalDia = function() {
+  const o = document.getElementById('calOverlay');
+  if (o) o.remove();
+};
+
+// ── EXCEL DÍA ──
+window.dlDia = async function(sucursal, mesKey, dia) {
+  const [anio, mes] = mesKey.split('-');
+  const filtrados = sucursal==='GENERAL'
+    ? pedidos.filter(p => { if(!p.timestamp)return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey && String(d.getDate()).padStart(2,'0')===dia; })
+    : pedidos.filter(p => { if(!p.timestamp||p.sucursal!==sucursal)return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey && String(d.getDate()).padStart(2,'0')===dia; });
+
+  const fechaStr = `${dia}/${mes}/${anio}`;
+  const sucStr   = sucursal==='GENERAL'?'TODAS LAS SUCURSALES':sucursal.toUpperCase();
+
+  // Acumular por producto para el día
+  const acum = {};
+  filtrados.forEach(p => p.items.forEach(it => {
+    const k = it.nombre;
+    if (!acum[k]) acum[k] = {...it, cantidad:0};
+    acum[k].cantidad += it.cantidad;
+  }));
+
+  const itemsDia = Object.values(acum);
+  // Tomar nombres del primer pedido completado del día
+  const pConNombres = filtrados.find(p => p.entregadoPor || p.recibidoPor);
+  itemsDia._entregadoPor = pConNombres ? (pConNombres.entregadoPor || '') : '';
+  itemsDia._recibidoPor  = pConNombres ? (pConNombres.recibidoPor  || '') : '';
+  await generarExcel(itemsDia, sucStr, fechaStr, `pedido_${sucursal}_${dia}-${mes}-${anio}`);
+  mostrarToast('✦ Excel del día descargado');
+};
+
+// ── EXCEL MES ──
+window.dlMes = async function(sucursal, mesKey) {
+  const [anio, mes] = mesKey.split('-');
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const nomMes = meses[parseInt(mes)-1] + ' ' + anio;
+  const sucStr = sucursal==='GENERAL'?'TODAS LAS SUCURSALES':sucursal.toUpperCase();
+
+  const filtrados = sucursal==='GENERAL'
+    ? pedidos.filter(p => { if(!p.timestamp)return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey; })
+    : pedidos.filter(p => { if(!p.timestamp||p.sucursal!==sucursal)return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey; });
+
+  // Acumular totales del mes
+  const acum = {};
+  filtrados.forEach(p => p.items.forEach(it => {
+    const k = it.nombre;
+    if (!acum[k]) acum[k] = {...it, cantidad:0};
+    acum[k].cantidad += it.cantidad;
+  }));
+
+  const itemsMes = Object.values(acum);
+  itemsMes._entregadoPor = '';
+  itemsMes._recibidoPor  = '';
+  await generarExcel(itemsMes, sucStr, 'MES: '+nomMes, `administracion_${sucursal}_${mes}-${anio}`);
+  mostrarToast('✦ Excel del mes descargado');
+};
+
+// ── GENERADOR EXCEL COMPARTIDO (ExcelJS) ──
+async function generarExcel(items, sucursal, fecha, nombreArchivo) {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Pedido', {pageSetup:{fitToPage:true,fitToWidth:1}});
+
+  const AZUL_OSC  = {argb:'FF1F3864'};
+  const AZUL_MED  = {argb:'FF2E5AA8'};
+  const AZUL_CLAR = {argb:'FFD6E4F7'};
+  const GRIS_MED  = {argb:'FFE0E0E0'};
+  const BLANCO    = {argb:'FFFFFFFF'};
+  const NEGRO     = {argb:'FF000000'};
+  const sf = c => ({type:'pattern',pattern:'solid',fgColor:c});
+  const bT = {style:'thin',  color:{argb:'FF000000'}};
+  const bM = {style:'medium',color:{argb:'FF000000'}};
+  const bH = {style:'hair',  color:{argb:'FFCCCCCC'}};
+  const allT = {top:bT,bottom:bT,left:bT,right:bT};
+  const allM = {top:bM,bottom:bM,left:bM,right:bM};
+  const softB= {top:bH,bottom:bH,left:bH,right:bH};
+
+  ws.columns = [{width:6},{width:30},{width:16},{width:10},{width:10},{width:22},{width:26}];
+  ws.getRow(1).height = 6;
+
+  // Título
+  ws.getRow(2).height = 36;
+  ws.mergeCells('A2:G2');
+  const t = ws.getCell('A2');
+  t.value='LISTA DE PEDIDOS'; t.font={bold:true,size:18,name:'Arial',color:BLANCO};
+  t.fill=sf(AZUL_OSC); t.alignment={horizontal:'center',vertical:'middle'}; t.border=allM;
+
+  ws.getRow(3).height = 10;
+
+  // Sucursal / Fecha
+  ws.getRow(4).height = 28;
+  ws.mergeCells('B4:C4'); ws.mergeCells('F4:G4');
+  const sCell = ws.getCell('B4');
+  sCell.value='SUCURSAL:  '+sucursal; sCell.font={bold:true,size:12,name:'Arial',color:AZUL_MED};
+  sCell.fill=sf(AZUL_CLAR); sCell.alignment={horizontal:'left',vertical:'middle'}; sCell.border=allM;
+  ws.getCell('A4').fill=sf(GRIS_MED); ws.getCell('A4').border=allT;
+  ws.getCell('D4').border={top:bT,bottom:bT};
+  const eCell = ws.getCell('E4');
+  eCell.value='FECHA:'; eCell.font={bold:true,size:11,name:'Arial',color:AZUL_OSC};
+  eCell.fill=sf(GRIS_MED); eCell.alignment={horizontal:'left',vertical:'middle'}; eCell.border=allT;
+  const fCell = ws.getCell('F4');
+  fCell.value=fecha; fCell.font={size:11,name:'Arial',color:AZUL_MED};
+  fCell.fill=sf(AZUL_CLAR); fCell.alignment={horizontal:'center',vertical:'middle'}; fCell.border=allT;
+  ws.getCell('G4').fill=sf(AZUL_CLAR); ws.getCell('G4').border=allT;
+
+  ws.getRow(5).height = 10;
+
+  // Headers
+  ws.getRow(6).height = 22;
+  const HDRS = ['ID','PRODUCTO','CATEGORÍA','UNIDAD','CANTIDAD','OBSERVACIONES','NOTA ALMACÉN'];
+  HDRS.forEach((h,i) => {
+    const c = ws.getRow(6).getCell(i+1);
+    c.value=h; c.font={bold:true,size:10,name:'Arial',color:BLANCO};
+    c.fill=sf(AZUL_MED); c.alignment={horizontal:'center',vertical:'middle'}; c.border=allT;
+  });
+
+  // Datos
+  items.forEach((it,i) => {
+    const r = 7+i;
+    ws.getRow(r).height = 18;
+    const bg = i%2===0 ? BLANCO : AZUL_CLAR;
+    const vals = [it.num||'',it.nombre||'',it.cat||'',it.unidad||'UNIDAD',it.cantidad,'',it.notaAlmacen||''];
+    const alns = ['center','left','left','center','center','left','left'];
+    vals.forEach((v,ci) => {
+      const c = ws.getRow(r).getCell(ci+1);
+      c.value=v; c.font={size:10,name:'Arial',color:NEGRO};
+      c.fill=sf(bg); c.alignment={horizontal:alns[ci],vertical:'middle',wrapText:ci===6}; c.border=allT;
+    });
+  });
+
+  // Filas vacías después de datos + definir fila de firmas
+  const firmaRow = 7 + items.length + 3;
+  for (let r=7+items.length; r<firmaRow; r++) {
+    ws.getRow(r).height=14;
+    for (let c=1;c<=7;c++) ws.getRow(r).getCell(c).border=softB;
+  }
+
+  // Firmas
+  const fr = firmaRow;
+  ws.getRow(fr).height=26; ws.getRow(fr+2).height=28; ws.getRow(fr+3).height=18;
+  ws.mergeCells(`B${fr}:C${fr}`);
+  const rb=ws.getCell(`B${fr}`); rb.value='RECIBÍ CONFORME'; rb.font={bold:true,size:11,name:'Arial',color:AZUL_OSC}; rb.fill=sf(GRIS_MED); rb.alignment={horizontal:'center',vertical:'middle'}; rb.border=allM;
+  ws.mergeCells(`E${fr}:G${fr}`);
+  const eb=ws.getCell(`E${fr}`); eb.value='ENTREGUÉ CONFORME'; eb.font={bold:true,size:11,name:'Arial',color:AZUL_OSC}; eb.fill=sf(GRIS_MED); eb.alignment={horizontal:'center',vertical:'middle'}; eb.border=allM;
+  ws.mergeCells(`B${fr+2}:C${fr+2}`);
+  ws.getCell(`B${fr+2}`).value = items._recibidoPor || '________________________';
+  ws.getCell(`B${fr+2}`).font = {bold:true,size:12,name:'Arial'};
+  ws.getCell(`B${fr+2}`).border={bottom:bM}; ws.getCell(`B${fr+2}`).alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(`E${fr+2}:G${fr+2}`);
+  ws.getCell(`E${fr+2}`).value = items._entregadoPor || '________________________';
+  ws.getCell(`E${fr+2}`).font = {bold:true,size:12,name:'Arial'};
+  ws.getCell(`E${fr+2}`).border={bottom:bM}; ws.getCell(`E${fr+2}`).alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(`B${fr+3}:C${fr+3}`);
+  ws.getCell(`B${fr+3}`).value='Nombre y firma'; ws.getCell(`B${fr+3}`).font={italic:true,size:9,name:'Arial',color:{argb:'FF888888'}}; ws.getCell(`B${fr+3}`).alignment={horizontal:'center'};
+  ws.mergeCells(`E${fr+3}:G${fr+3}`);
+  ws.getCell(`E${fr+3}`).value='Nombre y firma'; ws.getCell(`E${fr+3}`).font={italic:true,size:9,name:'Arial',color:{argb:'FF888888'}}; ws.getCell(`E${fr+3}`).alignment={horizontal:'center'};
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=nombreArchivo+'.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── EXCEL PEDIDO INDIVIDUAL (ENTREGAS) ──
+window.descargarExcel = async function(pedidoId) {
+  const p = pedidos.find(x => x.id===pedidoId);
+  if (!p) return;
+  const sucursal = (p.sucursal||'').toUpperCase();
+  const fecha    = formatFecha(p.timestamp);
+  const itemsConNombres = [...p.items];
+  itemsConNombres._entregadoPor = p.entregadoPor || '';
+  itemsConNombres._recibidoPor  = p.recibidoPor  || '';
+  await generarExcel(itemsConNombres, sucursal, fecha, `pedido_${p.sucursal||'barra'}_${new Date().toLocaleDateString('es-BO').replace(/\//g,'-')}`);
+  mostrarToast('✦ Excel descargado');
+};
+
+// ── TOAST ──
+function mostrarToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── FIREBASE ──
+const q = query(collection(db,'pedidos'), orderBy('timestamp','desc'));
+onSnapshot(q, snap => {
+  const antesP = pedidos.filter(p=>p.estado==='pendiente').length;
+  pedidos = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const ahoraP = pedidos.filter(p=>p.estado==='pendiente').length;
+  if (ahoraP > antesP) mostrarToast('🔔 Nuevo pedido de la barra');
+  actualizarContadores();
+  renderVista();
+});
+</script>
+</body>
+</html>
