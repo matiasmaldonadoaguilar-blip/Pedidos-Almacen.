@@ -1,0 +1,3123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almacén — Pedidos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Almacén">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root {
+  --oro:#111111; --oro-c:#333333; --oro-op:#11111112;
+  --verde:#1A7A42; --verde-op:#1A7A4215;
+  --neg:#FAFAFA; --car:#FFFFFF; --car2:#F5F5F5; --car3:#EBEBEB;
+  --bor:#E0E0E0; --bor2:#BBBBBB;
+  --txt:#111111; --mut:#666666; --dim:#CCCCCC;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--neg);color:var(--txt);min-height:100vh}
+
+.app-version{
+  display:inline-block;margin-top:36px;
+  font-family:'Cormorant Garamond',serif;font-size:12px;font-weight:600;letter-spacing:1.5px;
+  color:var(--oro);opacity:.85;pointer-events:none;user-select:none;
+  background:var(--car2);border:1px solid var(--bor);border-radius:5px;
+  padding:3px 11px;
+}
+
+/* ── PANTALLAS ── */
+.pantalla{display:none;flex-direction:column;min-height:100vh;padding:28px 20px 40px}
+.pantalla.activa{display:flex}
+
+/* ── ORNAMENTOS ── */
+.orn{text-align:center;color:var(--oro);font-size:11px;letter-spacing:6px;text-transform:uppercase;opacity:.6;margin-bottom:6px}
+.titulo-pant{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:var(--oro-c);letter-spacing:4px;text-transform:uppercase;text-align:center}
+.linea-oro{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--oro),transparent);margin:14px auto 0}
+.subtitulo{font-size:13px;color:var(--mut);margin-top:8px;letter-spacing:1px;font-style:italic;text-align:center}
+
+/* ── PANTALLA INICIO ── */
+#pantallaInicio{align-items:center;justify-content:center;background-image:radial-gradient(ellipse at 50% 0%,#11111108 0%,transparent 55%)}
+#pantallaTipoAlmacen{align-items:center;justify-content:center}
+#pantallaHiper{align-items:center;justify-content:center}
+#pantallaMercado{align-items:center;justify-content:center}
+.inicio-logo{font-size:52px;margin-bottom:16px}
+.inicio-btns{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px;margin-top:36px}
+.inicio-btn{display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:6px;cursor:pointer;transition:all .2s;position:relative;width:100%}
+.inicio-btn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--oro);transform:scaleY(0);transition:transform .2s;transform-origin:bottom;border-radius:3px 0 0 3px}
+.inicio-btn:active::before{transform:scaleY(1)}
+.inicio-btn:active{transform:scale(.97)}
+.ib-almacen{background:var(--oro);border:none}
+.ib-almacen:active{background:var(--oro-c)}
+.ib-administracion{background:var(--car2);border:1px solid var(--bor)}
+.ib-administracion:active{background:var(--car3)}
+.ib-icono{font-size:30px;flex-shrink:0}
+.ib-txt{flex:1;text-align:left}
+.ib-nombre{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:3px}
+.ib-almacen .ib-nombre{color:var(--neg)}
+.ib-administracion .ib-nombre{color:var(--oro-c)}
+.ib-desc{font-size:12px;opacity:.7;letter-spacing:.5px}
+.ib-almacen .ib-desc{color:var(--neg)}
+.ib-flecha{font-size:22px;opacity:.6}
+.ib-almacen .ib-flecha{color:var(--neg)}
+.ib-administracion .ib-flecha{color:var(--bor2)}
+
+/* ── PANTALLA ADMINISTRACIÓN ── */
+.suc-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:400px;margin:28px auto 0}
+.suc-btn{background:var(--car2);border:1px solid var(--bor);border-radius:8px;padding:22px 16px;cursor:pointer;transition:all .2s;text-align:center}
+.suc-btn:active{transform:scale(.96);background:var(--car3);border-color:var(--oro)}
+.suc-btn .sic{font-size:30px;display:block;margin-bottom:8px}
+.suc-btn .snm{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--oro-c);letter-spacing:2px;text-transform:uppercase}
+.suc-btn.general{grid-column:1/-1;background:var(--oro-op);border-color:var(--bor2)}
+.admin-cuadros{width:100%;max-width:400px;margin:24px auto 0}
+
+/* ── ADMINISTRACIÓN: horario límite de pedidos ── */
+.horario-toggles{display:flex;flex-direction:column;gap:10px;width:100%;max-width:400px;margin:0 auto 8px}
+.horario-toggle{display:flex;align-items:center;gap:14px;background:var(--car2);border:1px solid var(--bor);border-radius:8px;padding:14px 16px}
+.ht-nombre{flex:1;font-family:'Playfair Display',serif;font-size:15px;color:var(--txt);letter-spacing:.5px}
+.ht-switch{width:46px;height:26px;border-radius:13px;background:var(--dim);border:1px solid var(--bor2);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s,border-color .2s;padding:0}
+.ht-switch-dot{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.ht-switch.activo{background:var(--verde);border-color:var(--verde)}
+.ht-switch.activo .ht-switch-dot{transform:translateX(20px)}
+.ht-estado{font-size:12px;color:var(--mut);letter-spacing:.5px;min-width:88px;text-align:right}
+.ht-estado.ht-estado-on{color:var(--verde);font-weight:700}
+.btn-volver{background:transparent;border:none;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:2px;cursor:pointer;padding:12px;text-transform:uppercase;transition:color .15s;margin-top:20px;align-self:center}
+.btn-volver:active{color:var(--oro)}
+
+/* ── PANTALLA CALENDARIO ── */
+.cal-header{text-align:center;margin-bottom:8px}
+.cal-suc-chip{display:inline-flex;align-items:center;gap:5px;background:var(--oro-op);border:1px solid var(--bor2);border-radius:20px;padding:3px 12px;margin-top:6px}
+.cal-suc-chip span{font-size:11px;color:var(--oro-c);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+/* Nav año */
+.cal-nav{display:flex;align-items:center;gap:14px;margin:10px 0 12px 4px}
+.cal-nav-btn{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:color .15s}
+.cal-nav-btn:active{color:var(--oro)}
+.cal-anio{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--oro);letter-spacing:1px;flex:1}
+/* Grilla 3 columnas */
+.cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px}
+.cal-mes-box{padding:0}
+.cal-mes-nom{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:3px}
+.cal-mes-nom.tiene-datos{color:var(--oro-c)}
+.cal-dias-hdr{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:1px}
+.cal-dhdr{font-size:8px;color:var(--dim);text-align:center;font-weight:400}
+.cal-dias{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-d{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#888;cursor:default;position:relative;border-radius:50%}
+.cal-d.con-pedido{color:var(--neg);font-weight:700;cursor:pointer;background:var(--oro);border-radius:50%}
+.cal-d.con-pedido:active{opacity:.7}
+.cal-d.hoy{color:var(--txt);font-weight:600}
+.cal-d.vacio{visibility:hidden}
+/* Separador mes */
+.cal-mes-sep{height:1px;background:var(--bor);margin-top:5px;display:none}
+.cal-mes-box.tiene-datos .cal-mes-sep{display:block}
+/* Botón Excel mes — pequeño */
+.cal-mes-dl{margin-top:3px}
+.btn-mes-xl{width:100%;background:transparent;border:1px solid var(--verde);color:var(--verde);font-size:8px;letter-spacing:.3px;padding:2px 0;border-radius:3px;cursor:pointer;text-transform:uppercase}
+.btn-mes-xl:active{background:var(--verde-op)}
+/* Modal */
+.cal-overlay{position:fixed;inset:0;background:#00000099;z-index:500;display:flex;align-items:flex-end;justify-content:center;padding:0}
+.cal-modal{background:var(--car2);border:1px solid var(--bor);border-top-left-radius:20px;border-top-right-radius:20px;border-bottom-left-radius:0;border-bottom-right-radius:0;padding:20px 24px 36px;width:100%;max-width:480px;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cal-modal-handle{width:36px;height:4px;background:var(--bor2);border-radius:2px;margin:0 auto 16px}
+.cal-modal-fecha{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--oro-c);line-height:1}
+.cal-modal-sub{font-size:13px;color:var(--mut);letter-spacing:1px;margin:3px 0 14px}
+.cal-modal-info{font-size:14px;color:var(--txt);padding:10px 12px;background:var(--car);border-radius:8px;border:1px solid var(--bor);margin-bottom:14px}
+.btn-dl-dia{width:100%;padding:15px;background:var(--oro);color:var(--neg);border:none;border-radius:10px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.btn-dl-dia:active{background:var(--oro-c)}
+.btn-modal-close{width:100%;padding:12px;background:transparent;color:var(--mut);border:1px solid var(--bor);border-radius:10px;font-size:13px;cursor:pointer;letter-spacing:1px;text-transform:uppercase}
+.cal-vacio{text-align:center;padding:40px 20px;color:var(--mut);font-style:italic}
+
+/* ── APP HEADER ── */
+.app-back{display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;background:transparent;border:none;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;transition:color .15s;padding:0}
+.app-back:active{color:var(--oro)}
+header{text-align:center;margin-bottom:20px}
+header h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--oro-c);letter-spacing:4px;text-transform:uppercase}
+header::after{content:'';display:block;width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--oro),transparent);margin:12px auto 0}
+#subtitulo{font-size:13px;color:var(--mut);margin-top:6px;letter-spacing:1px;font-style:italic}
+
+/* ── FILTROS ── */
+.filtros{display:flex;gap:8px;margin-bottom:20px}
+.filtro-btn{flex:1;padding:9px 6px;border:1px solid var(--bor);background:transparent;color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .2s;text-align:center}
+.filtro-btn.activo{border-color:var(--oro);color:var(--oro);background:var(--oro-op);font-weight:700}
+.cbadge{display:inline-flex;align-items:center;justify-content:center;background:#8B3A3A;color:#F5C0C0;border-radius:50%;width:17px;height:17px;font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle}
+
+/* ── CARDS ── */
+.pedidos-lista{display:flex;flex-direction:column;gap:14px}
+.pedido-card{background:var(--car2);border:1px solid var(--bor);border-radius:6px;padding:18px;position:relative;overflow:hidden;animation:aparecer .3s ease}
+@keyframes aparecer{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.pedido-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--oro),transparent)}
+.pedido-card.completado-card::before{background:linear-gradient(90deg,transparent,var(--verde),transparent)}
+.pedido-card.completado-card{opacity:.75}
+.pedido-header{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bor)}
+.pedido-header-top{display:flex;justify-content:space-between;align-items:center}
+.pedido-hora{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+.pedido-sucursal{display:inline-flex;align-items:center;gap:6px;background:var(--oro-op);border:1px solid var(--bor2);border-radius:3px;padding:4px 10px;font-family:'Playfair Display',serif;font-size:12px;color:var(--oro-c);font-weight:700;letter-spacing:2px;text-transform:uppercase;align-self:flex-start}
+.badge{font-family:'Cormorant Garamond',serif;font-size:11px;padding:3px 10px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;font-weight:500}
+.badge.pendiente{background:#11111118;color:var(--oro);border:1px solid #11111144}
+.badge.entregado{background:#1A7A4218;color:var(--verde);border:1px solid #1A7A4244}
+.badge.completado-b{background:#2563eb18;color:#7EB3FF;border:1px solid #2563eb44}
+
+/* ── PROGRESO ── */
+.prog-wrap{margin-bottom:12px}
+.prog-txt{font-size:12px;color:var(--mut);letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between}
+.prog-bg{height:2px;background:var(--car3);border-radius:1px;overflow:hidden}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--oro),var(--oro-c));border-radius:1px;transition:width .4s ease}
+
+/* ── ITEMS ── */
+.pedido-items{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.item-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--car);border:1px solid var(--bor);border-radius:3px;cursor:pointer;transition:all .2s;user-select:none}
+.item-row.no-click{cursor:default}
+.item-row:hover:not(.no-click){border-color:var(--bor2)}
+.item-row.tachado{opacity:.45;border-color:transparent}
+.item-check{width:22px;height:22px;border-radius:50%;border:1px solid var(--bor2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .2s;color:var(--neg)}
+.item-row.tachado .item-check{background:var(--oro);border-color:var(--oro)}
+.item-nombre{flex:1;font-size:15px;letter-spacing:.3px;transition:all .2s}
+.item-row.tachado .item-nombre{text-decoration:line-through;color:var(--mut)}
+.item-qty{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--oro);min-width:36px;text-align:right}
+.item-row.tachado .item-qty{color:var(--dim)}
+.item-nota-btn{flex-shrink:0;background:transparent;border:1px solid var(--bor2);color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:3px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.item-nota-btn.tiene-nota{background:var(--oro-op);border-color:var(--oro);color:var(--oro)}
+.item-nota-wrap{padding:6px 12px 8px;display:none;background:var(--car);border-left:1px solid var(--bor);border-right:1px solid var(--bor);border-bottom:1px solid var(--bor);border-radius:0 0 3px 3px;margin-top:-1px}
+.item-nota-wrap.visible{display:block}
+.item-nota-input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--bor);color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:14px;outline:none;padding:4px 0;resize:none}
+.item-nota-input::placeholder{color:var(--dim);font-style:italic}
+.item-nota-input:focus{border-bottom-color:var(--oro)}
+
+/* ── NOTA GENERAL ── */
+.nota-texto{font-size:13px;color:var(--mut);background:var(--car);padding:8px 12px;border-radius:3px;margin-bottom:12px;border-left:2px solid var(--oro);font-style:italic}
+
+/* ── NOMBRES CONFIRMADOS ── */
+.nombres-box{background:var(--car);border:1px solid var(--bor);border-radius:6px;padding:12px 14px;margin-bottom:12px}
+.nombre-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px}
+.nombre-row+.nombre-row{border-top:1px solid var(--bor);padding-top:8px;margin-top:4px}
+.nombre-lbl{font-size:11px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;min-width:90px}
+.nombre-val{color:var(--oro-c);font-weight:600;font-family:'Playfair Display',serif}
+
+/* ── INPUTS ── */
+.nombre-wrap{margin-bottom:10px}
+.nombre-label{font-size:11px;color:var(--mut);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px}
+.nombre-input{width:100%;background:var(--car);border:1px solid var(--bor);border-radius:6px;padding:11px 14px;color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:16px;outline:none;transition:border-color .2s}
+.nombre-input:focus{border-color:var(--oro)}
+.nombre-input::placeholder{color:var(--dim);font-style:italic}
+
+/* ── BOTONES ── */
+.acciones{display:flex;flex-direction:column;gap:8px}
+.btn-confirmar{width:100%;padding:13px;background:transparent;color:var(--oro);border:1px solid var(--oro);border-radius:4px;font-family:'Playfair Display',serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:3px;text-transform:uppercase;transition:all .2s;position:relative;overflow:hidden}
+.btn-confirmar::before{content:'';position:absolute;inset:0;background:var(--oro);transform:scaleX(0);transform-origin:left;transition:transform .25s ease}
+.btn-confirmar:hover:not(:disabled)::before{transform:scaleX(1)}
+.btn-confirmar:hover:not(:disabled){color:var(--neg)}
+.btn-confirmar span{position:relative;z-index:1}
+.btn-confirmar:disabled{border-color:var(--bor);color:var(--dim);cursor:not-allowed}
+.btn-confirmar:disabled::before{display:none}
+.btn-excel{width:100%;padding:11px;background:transparent;color:var(--verde);border:1px solid #1A7A4244;border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-excel:hover{background:var(--verde-op);border-color:var(--verde)}
+.btn-deshacer{width:100%;padding:10px;background:transparent;color:var(--dim);border:1px solid var(--dim);border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.btn-deshacer:hover{color:var(--mut);border-color:var(--mut)}
+
+/* ── HIPERMAXI: desglose por sucursal ── */
+.hiper-desglose{display:flex;flex-wrap:wrap;gap:10px;padding:0 12px 8px;font-size:11px;color:var(--mut);letter-spacing:.5px}
+
+/* ── BOTÓN AMPLIAR ── */
+.btn-ampliar{background:transparent;border:1px solid var(--bor2);color:var(--mut);font-size:16px;width:32px;height:32px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.btn-ampliar:hover{border-color:var(--oro);color:var(--oro)}
+
+/* ── PANTALLA COMPLETA POR PEDIDO ── */
+.pedido-full-overlay{position:fixed;inset:0;background:var(--neg);z-index:700;overflow-y:auto;padding:0 0 110px;animation:aparecer .2s ease}
+.pf-topbar{position:sticky;top:0;background:var(--car);border-bottom:1px solid var(--bor);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+.pf-close{background:transparent;border:1px solid var(--bor);color:var(--mut);font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:1px;padding:8px 16px;border-radius:6px;cursor:pointer;transition:all .15s}
+.pf-close:hover{border-color:var(--oro);color:var(--oro)}
+.pf-badge{background:var(--oro-op);border:1px solid var(--bor2);border-radius:4px;padding:6px 14px;font-family:'Playfair Display',serif;font-size:15px;color:var(--oro-c);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.pf-body{padding:20px}
+.pf-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.pf-hora{font-size:14px;color:var(--mut);letter-spacing:1px}
+.pf-progress{margin-bottom:20px}
+.pf-progress-txt{font-size:15px;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:8px;letter-spacing:1px}
+.pf-progress-txt b{color:var(--txt);font-family:'Playfair Display',serif;font-size:18px}
+.pf-progress-bg{height:8px;background:var(--car3);border-radius:4px;overflow:hidden}
+.pf-progress-bar{height:100%;background:var(--oro);border-radius:4px;transition:width .4s ease}
+.pf-items{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.pf-item{background:var(--car);border:2px solid var(--bor);border-radius:10px;padding:16px 18px;cursor:pointer;transition:all .15s;user-select:none}
+.pf-item:hover{border-color:var(--bor2)}
+.pf-item.tachado{opacity:.4;border-color:transparent;background:var(--car2)}
+.pf-item-row{display:flex;align-items:center;gap:16px}
+.pf-item-check{width:36px;height:36px;border-radius:50%;border:2px solid var(--bor2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;color:var(--neg);transition:all .15s}
+.pf-item.tachado .pf-item-check{background:var(--oro);border-color:var(--oro)}
+.pf-item-nombre{flex:1;font-size:21px;letter-spacing:.2px;line-height:1.25}
+.pf-item.tachado .pf-item-nombre{text-decoration:line-through;color:var(--mut)}
+.pf-item-qty{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--oro);min-width:64px;text-align:right}
+.pf-item.tachado .pf-item-qty{color:var(--dim)}
+.pf-nota-btn{flex-shrink:0;background:transparent;border:1px solid var(--bor2);color:var(--mut);font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:5px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.pf-nota-btn.tiene-nota{background:var(--oro-op);border-color:var(--oro);color:var(--oro)}
+.pf-nota-wrap{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--bor)}
+.pf-nota-wrap.visible{display:block}
+.pf-nota-input{width:100%;background:var(--car2);border:1px solid var(--bor);border-radius:8px;color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:16px;outline:none;padding:10px 12px;resize:none}
+.pf-nota-input::placeholder{color:var(--dim);font-style:italic}
+.pf-nota-input:focus{border-color:var(--oro)}
+.pf-nota-almacen{font-size:13px;color:var(--oro);font-style:italic;margin-top:8px;padding-left:52px}
+.pf-nota-general{font-size:15px;color:var(--mut);background:var(--car);padding:12px 16px;border-radius:8px;margin-bottom:20px;border-left:3px solid var(--oro);font-style:italic}
+.pf-footer{position:fixed;left:0;right:0;bottom:0;background:var(--car);border-top:1px solid var(--bor);padding:14px 20px 20px;z-index:2}
+.pf-nombre-label{font-size:12px;color:var(--mut);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:8px}
+.pf-nombre-input{width:100%;background:var(--car2);border:1px solid var(--bor);border-radius:8px;padding:14px 16px;color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:18px;outline:none;margin-bottom:10px;transition:border-color .2s}
+.pf-nombre-input:focus{border-color:var(--oro)}
+.pf-nombre-input::placeholder{color:var(--dim);font-style:italic}
+.pf-btn-confirmar{width:100%;padding:16px;background:var(--oro);color:var(--neg);border:none;border-radius:8px;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.pf-btn-confirmar:hover{opacity:.85}
+.pf-btn-confirmar:disabled{background:var(--car3);color:var(--dim);cursor:not-allowed}
+
+/* ── ENTREGAS SIMPLE ── */
+.entrega-simple{background:var(--car2);border:1px solid var(--bor);border-radius:6px;padding:16px 18px;display:flex;align-items:center;gap:12px;animation:aparecer .3s ease}
+.es-suc{font-family:'Playfair Display',serif;font-size:13px;color:var(--oro-c);font-weight:700;letter-spacing:2px;text-transform:uppercase;display:block}
+.es-fecha{font-size:12px;color:var(--mut);letter-spacing:1px;margin-top:3px;display:block}
+.es-info{flex:1}
+.es-dl{background:transparent;border:1px solid var(--verde);color:var(--verde);font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:8px 14px;border-radius:4px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+
+/* ── HIPERMAXI: precios ── */
+.es-precio{font-size:12px;color:var(--oro);letter-spacing:.5px;margin-top:4px;display:block}
+.es-btns{display:flex;gap:8px;flex-shrink:0}
+.btn-precios{width:100%;padding:11px;background:transparent;color:var(--oro);border:1px solid var(--oro);border-radius:3px;font-family:'Cormorant Garamond',serif;font-size:14px;letter-spacing:1px;cursor:pointer;transition:all .15s;margin-bottom:10px}
+.btn-precios:hover{background:var(--oro-op)}
+.entrega-hiper .btn-precios{width:auto;padding:8px 12px;margin-bottom:0;font-size:16px}
+.precios-lista{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.precio-row{background:var(--car);border:1px solid var(--bor);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.precio-info{flex:1;min-width:140px;display:flex;flex-direction:column}
+.precio-nombre{font-size:16px;color:var(--txt)}
+.precio-cant{font-size:12px;color:var(--mut);letter-spacing:.5px}
+.precio-input-wrap{display:flex;align-items:center;gap:6px;background:var(--car2);border:1px solid var(--bor);border-radius:6px;padding:6px 10px}
+.precio-simb{font-size:13px;color:var(--mut)}
+.precio-input{width:80px;background:transparent;border:none;outline:none;color:var(--txt);font-family:'Cormorant Garamond',serif;font-size:16px}
+.precio-subtotal{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--oro);min-width:80px;text-align:right}
+.precio-total-box{display:flex;justify-content:space-between;align-items:center;background:var(--oro-op);border:1px solid var(--oro);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--oro-c);letter-spacing:1px}
+.monto-entregado-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--car);border:1px dashed var(--bor2);border-radius:8px;padding:12px 14px;margin-bottom:18px;flex-wrap:wrap}
+.precio-cambio-box{display:flex;justify-content:space-between;align-items:center;background:var(--car2);border:1px solid var(--bor);border-radius:8px;padding:12px 18px;margin-bottom:20px;margin-top:-10px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--txt);letter-spacing:1px}
+.precio-fijo-row{background:var(--car);border:1px dashed var(--bor2);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.precio-fijo-row .precio-nombre{font-style:italic}
+.es-dl:active{background:var(--verde-op)}
+
+/* ── SIN PEDIDOS ── */
+.sin-pedidos{text-align:center;padding:50px 20px;border:1px solid var(--bor);border-radius:4px;background:var(--car2)}
+.sin-pedidos .orn-v{font-size:26px;display:block;margin-bottom:12px;color:var(--bor2)}
+.sin-pedidos p{font-size:15px;color:var(--mut);font-style:italic}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--car2);border:1px solid var(--oro);color:var(--oro-c);padding:12px 28px;border-radius:4px;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:1px;transition:transform .3s ease;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- ══ PANTALLA INICIO ══ -->
+<div class="pantalla activa" id="pantallaInicio">
+  <div style="text-align:center">
+    <div class="inicio-logo">📦</div>
+    <div class="orn">✦ &nbsp; Sistema &nbsp; ✦</div>
+    <div class="titulo-pant">Almacén</div>
+    <div class="linea-oro"></div>
+  </div>
+  <div class="inicio-btns">
+    <button class="inicio-btn ib-almacen" id="btnIrAlmacen">
+      <span class="ib-icono">🏭</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Almacén</span>
+        <span class="ib-desc">Gestionar pedidos entrantes</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+    <button class="inicio-btn ib-administracion" id="btnIrAdministración">
+      <span class="ib-icono">📊</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Administración</span>
+        <span class="ib-desc">Historial y reportes por sucursal</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+  </div>
+  <div class="app-version">V2.0</div>
+</div>
+
+<!-- ══ PANTALLA TIPO DE ALMACÉN (Diario / Hipermaxi / Mercado) ══ -->
+<div class="pantalla" id="pantallaTipoAlmacen">
+  <button class="app-back" id="btnTipoAlmacenBack">← Inicio</button>
+  <div class="orn">✦ &nbsp; Almacén &nbsp; ✦</div>
+  <div class="titulo-pant">Almacén</div>
+  <div class="linea-oro"></div>
+  <p class="subtitulo" style="margin-top:10px">Seleccioná qué pedidos vas a gestionar</p>
+  <div class="inicio-btns">
+    <button class="inicio-btn ib-almacen" id="btnTipoDiario">
+      <span class="ib-icono">📋</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Diario</span>
+        <span class="ib-desc">Pedidos de cocina y barra de todos los días</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+    <button class="inicio-btn ib-administracion" id="btnTipoHiper">
+      <span class="ib-icono">🛒</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Hipermaxi</span>
+        <span class="ib-desc">Pedidos de Hipermaxi</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+    <button class="inicio-btn ib-administracion" id="btnTipoMercado">
+      <span class="ib-icono">🏪</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Mercado</span>
+        <span class="ib-desc">Pedidos de Mercado</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ PANTALLA HIPERMAXI (operativa: Pedido / Despacho / Entregas) ══ -->
+<div class="pantalla" id="pantallaHiper">
+  <button class="app-back" id="btnHiperBack">← Almacén</button>
+  <div class="orn">✦ &nbsp; Almacén &nbsp; ✦</div>
+  <header>
+    <h1>Hipermaxi</h1>
+    <p id="subtituloHiper">Esperando pedidos de las 3 sucursales...</p>
+  </header>
+  <div class="filtros">
+    <button class="filtro-btn activo" id="hfiltro-pedido" onclick="setFiltroHiper('pedido')">
+      Pedido <span class="cbadge" id="hcountPedido">0</span>
+    </button>
+    <button class="filtro-btn" id="hfiltro-despachos" onclick="setFiltroHiper('despachos')">
+      Despachos <span class="cbadge" id="hcountDespachos" style="display:none"></span>
+    </button>
+    <button class="filtro-btn" id="hfiltro-entregas" onclick="setFiltroHiper('entregas')">
+      Entregas
+    </button>
+  </div>
+  <div class="pedidos-lista" id="hiperLista">
+    <div class="sin-pedidos"><span class="orn-v">⏳</span><p>Conectando...</p></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA MERCADO (operativa: Pedido / Despacho / Entregas) ══ -->
+<div class="pantalla" id="pantallaMercado">
+  <button class="app-back" id="btnMercadoBack">← Almacén</button>
+  <div class="orn">✦ &nbsp; Almacén &nbsp; ✦</div>
+  <header>
+    <h1>Mercado</h1>
+    <p id="subtituloMercado">Esperando pedidos de las 4 sucursales...</p>
+  </header>
+  <div class="filtros">
+    <button class="filtro-btn activo" id="mfiltro-pedido" onclick="setFiltroMercado('pedido')">
+      Pedido <span class="cbadge" id="mcountPedido">0</span>
+    </button>
+    <button class="filtro-btn" id="mfiltro-despachos" onclick="setFiltroMercado('despachos')">
+      Despachos <span class="cbadge" id="mcountDespachos" style="display:none"></span>
+    </button>
+    <button class="filtro-btn" id="mfiltro-entregas" onclick="setFiltroMercado('entregas')">
+      Entregas
+    </button>
+  </div>
+  <div class="pedidos-lista" id="mercadoLista">
+    <div class="sin-pedidos"><span class="orn-v">⏳</span><p>Conectando...</p></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA APP ══ -->
+<div class="pantalla" id="pantallaApp">
+  <button class="app-back" id="btnAppBack">← Inicio</button>
+  <div class="orn">✦ &nbsp; Almacén &nbsp; ✦</div>
+  <header>
+    <h1>Almacén</h1>
+    <p id="subtitulo">Esperando pedidos...</p>
+  </header>
+  <div class="filtros">
+    <button class="filtro-btn activo" id="filtro-pedido" onclick="setFiltro('pedido')">
+      Pedido <span class="cbadge" id="countPedido">0</span>
+    </button>
+    <button class="filtro-btn" id="filtro-despachos" onclick="setFiltro('despachos')">
+      Despachos <span class="cbadge" id="countDespachos" style="display:none"></span>
+    </button>
+    <button class="filtro-btn" id="filtro-entregas" onclick="setFiltro('entregas')">
+      Entregas
+    </button>
+  </div>
+  <div class="pedidos-lista" id="pedidosLista">
+    <div class="sin-pedidos"><span class="orn-v">⏳</span><p>Conectando...</p></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA ADMINISTRACIÓN ══ -->
+<div class="pantalla" id="pantallaAdministración">
+  <button class="app-back" id="btnAdministraciónBack">← Inicio</button>
+  <div class="orn">✦ &nbsp; Administración &nbsp; ✦</div>
+  <div class="titulo-pant">Historial</div>
+  <div class="linea-oro"></div>
+  <p class="subtitulo" style="margin-top:10px">Seleccioná una sucursal</p>
+  <div class="suc-btns">
+    <button class="suc-btn" data-suc="Beni" data-ico="🌿">
+      <span class="sic">🌿</span><span class="snm">Beni</span>
+    </button>
+    <button class="suc-btn" data-suc="Alemana" data-ico="🏛️">
+      <span class="sic">🏛️</span><span class="snm">Alemana</span>
+    </button>
+    <button class="suc-btn" data-suc="Zoológico" data-ico="🦁">
+      <span class="sic">🦁</span><span class="snm">Zoológico</span>
+    </button>
+    <button class="suc-btn general" data-suc="GENERAL" data-ico="📊">
+      <span class="sic">📊</span><span class="snm">General</span>
+    </button>
+  </div>
+
+  <div class="linea-oro" style="margin-top:30px"></div>
+  <div class="admin-cuadros">
+    <button class="inicio-btn ib-administracion" id="btnIrHabilitarPedidos">
+      <span class="ib-icono">🔓</span>
+      <div class="ib-txt">
+        <span class="ib-nombre">Habilitar pedidos</span>
+        <span class="ib-desc">Activar el pedido fuera de horario, por sucursal</span>
+      </div>
+      <span class="ib-flecha">›</span>
+    </button>
+  </div>
+
+  <button class="btn-volver" id="btnAdministraciónVolver">← Volver</button>
+</div>
+
+<!-- ══ PANTALLA HISTORIAL — TIPO DE PEDIDO ══ -->
+<div class="pantalla" id="pantallaHistorialTipo">
+  <button class="app-back" id="btnHistorialTipoBack">← Administración</button>
+  <div class="cal-header">
+    <div class="orn">✦ &nbsp; Historial &nbsp; ✦</div>
+    <div class="titulo-pant">Historial</div>
+    <div class="cal-suc-chip">
+      <span id="htIco">📊</span>
+      <span id="htNom">—</span>
+    </div>
+  </div>
+  <div class="linea-oro" style="margin-top:16px"></div>
+  <p class="subtitulo" style="margin-top:10px">Seleccioná un tipo de pedido</p>
+  <div class="suc-btns">
+    <button class="suc-btn" data-tipo="diario" data-ico="📋">
+      <span class="sic">📋</span><span class="snm">Pedido Diario</span>
+    </button>
+    <button class="suc-btn" data-tipo="hipermaxi" data-ico="🛒">
+      <span class="sic">🛒</span><span class="snm">Hipermaxi</span>
+    </button>
+    <button class="suc-btn general" data-tipo="mercado" data-ico="🏪">
+      <span class="sic">🏪</span><span class="snm">Mercado</span>
+    </button>
+  </div>
+  <button class="btn-volver" id="btnHistorialTipoVolver">← Volver</button>
+</div>
+
+<!-- ══ PANTALLA HABILITAR PEDIDOS ══ -->
+<div class="pantalla" id="pantallaHabilitarPedidos">
+  <button class="app-back" id="btnHabilitarPedidosBack">← Administración</button>
+  <div class="orn">✦ &nbsp; Administración &nbsp; ✦</div>
+  <div class="titulo-pant">Habilitar Pedidos</div>
+  <div class="linea-oro"></div>
+  <p class="subtitulo" style="margin-top:10px">Fuera de horario, por sucursal</p>
+  <p style="font-size:12px;color:var(--mut);text-align:center;margin-top:-4px;margin-bottom:16px;padding:0 24px;line-height:1.5">
+    Los pedidos cierran solos: Diario Cocina a las 5:00 PM (5:30 PM sáb-dom), Diario Barra/Salón a las 4:30 PM todos los días, Hipermaxi y Mercado a las 10:00 PM. Activá esto solo si una sucursal necesita pedir después de esa hora — se apaga solo al día siguiente.
+  </p>
+  <div class="horario-toggles">
+    <div class="horario-toggle">
+      <span class="ht-nombre">🌿 Beni</span>
+      <button class="ht-switch" id="htSwitch-Beni" onclick="toggleHorarioSucursal('Beni')"><span class="ht-switch-dot"></span></button>
+      <span class="ht-estado" id="htEstado-Beni">Normal</span>
+    </div>
+    <div class="horario-toggle">
+      <span class="ht-nombre">🏛️ Alemana</span>
+      <button class="ht-switch" id="htSwitch-Alemana" onclick="toggleHorarioSucursal('Alemana')"><span class="ht-switch-dot"></span></button>
+      <span class="ht-estado" id="htEstado-Alemana">Normal</span>
+    </div>
+    <div class="horario-toggle">
+      <span class="ht-nombre">🦁 Zoológico</span>
+      <button class="ht-switch" id="htSwitch-Zoológico" onclick="toggleHorarioSucursal('Zoológico')"><span class="ht-switch-dot"></span></button>
+      <span class="ht-estado" id="htEstado-Zoológico">Normal</span>
+    </div>
+    <div class="horario-toggle">
+      <span class="ht-nombre">🏭 Galpón</span>
+      <button class="ht-switch" id="htSwitch-Galpón" onclick="toggleHorarioSucursal('Galpón')"><span class="ht-switch-dot"></span></button>
+      <span class="ht-estado" id="htEstado-Galpón">Normal</span>
+    </div>
+  </div>
+  <p style="font-size:11px;color:var(--mut);text-align:center;margin-top:4px">🏭 Galpón solo aplica a pedidos de Mercado.</p>
+  <button class="btn-volver" id="btnHabilitarPedidosVolver">← Volver</button>
+</div>
+
+<!-- ══ PANTALLA CALENDARIO ══ -->
+<div class="pantalla" id="pantallaCalendario">
+  <button class="app-back" id="btnCalBack">← Administración</button>
+  <div class="cal-header">
+    <div class="orn">✦ &nbsp; Historial &nbsp; ✦</div>
+    <div class="titulo-pant">Calendario</div>
+    <div class="cal-suc-chip">
+      <span id="calIco">📊</span>
+      <span id="calNom">—</span>
+    </div>
+    <div class="cal-suc-chip" id="calTipoChip" style="display:flex;justify-content:center;margin-top:6px;opacity:.85">
+      <span id="calTipoNom">—</span>
+    </div>
+  </div>
+  <div id="calBody">
+    <div class="cal-vacio">Cargando pedidos...</div>
+  </div>
+  <button class="btn-volver" id="btnCalVolver">← Volver</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyA_oHjATWDHDvSv7ztqPDfWJkXuLR9ceZs",
+  authDomain:"proyecto-2-bara.firebaseapp.com",
+  projectId:"proyecto-2-bara",
+  storageBucket:"proyecto-2-bara.firebasestorage.app",
+  messagingSenderId:"467039108962",
+  appId:"1:467039108962:web:e7eb55bd1e10eca09bf63b"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let pedidos      = [];
+let filtroActual = 'pedido';
+const tachados   = {};
+const notasItems = {};
+
+// Orden de categorías para mostrar los pedidos agrupados (más fácil de preparar)
+const CATEGORIA_ORDEN = [
+  'ABARROTES', 'MARISCO', 'PROCESADOS', 'CONDIMENTOS',
+  'GASEOSAS', 'CERVEZAS Y VINOS', 'LIMPIEZA',
+  'ENVASES', 'ENVACES', 'BOLSAS', 'PERSONALIZADO'
+];
+function rankCategoria(cat) {
+  const i = CATEGORIA_ORDEN.indexOf((cat || '').toUpperCase());
+  return i === -1 ? CATEGORIA_ORDEN.length : i;
+}
+function compararItemsPorCategoria(a, b) {
+  const ra = rankCategoria(a.cat), rb = rankCategoria(b.cat);
+  if (ra !== rb) return ra - rb;
+  return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+}
+
+// La vista "Diario" (Pedido/Despachos/Entregas + contadores + historial) solo
+// debe mostrar pedidos sin "tipo" (los que ya manda la versión normal) o con
+// tipo:'diario' explícito. Los de Hipermaxi/Mercado quedan fuera de acá.
+function esDiario(p) {
+  return !p.tipo || p.tipo === 'diario';
+}
+
+// ── NAVEGACIÓN ENTRE PANTALLAS ──
+function ir(id) {
+  document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+  document.getElementById(id).classList.add('activa');
+  window.scrollTo(0,0);
+}
+
+document.getElementById('btnIrAlmacen').addEventListener('click', () => ir('pantallaTipoAlmacen'));
+document.getElementById('btnIrAdministración').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnTipoAlmacenBack').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnTipoDiario').addEventListener('click', () => ir('pantallaApp'));
+document.getElementById('btnTipoHiper').addEventListener('click', () => { ir('pantallaHiper'); renderVistaHiper(); });
+document.getElementById('btnTipoMercado').addEventListener('click', () => { ir('pantallaMercado'); renderVistaMercado(); });
+document.getElementById('btnHiperBack').addEventListener('click', () => ir('pantallaTipoAlmacen'));
+document.getElementById('btnMercadoBack').addEventListener('click', () => ir('pantallaTipoAlmacen'));
+document.getElementById('btnAppBack').addEventListener('click', () => ir('pantallaTipoAlmacen'));
+document.getElementById('btnAdministraciónBack').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnAdministraciónVolver').addEventListener('click', () => ir('pantallaInicio'));
+document.getElementById('btnIrHabilitarPedidos').addEventListener('click', () => ir('pantallaHabilitarPedidos'));
+document.getElementById('btnHabilitarPedidosBack').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnHabilitarPedidosVolver').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnHistorialTipoBack').addEventListener('click', () => ir('pantallaAdministración'));
+document.getElementById('btnHistorialTipoVolver').addEventListener('click', () => ir('pantallaAdministración'));
+// Volver del Calendario: a la pantalla de tipos solo si vino de GENERAL (la
+// única que pasa por ahí); Beni/Alemana/Zoológico entran directo a Diario,
+// así que vuelven directo a Administración.
+document.getElementById('btnCalBack').addEventListener('click', () => ir(calSucActual === 'GENERAL' ? 'pantallaHistorialTipo' : 'pantallaAdministración'));
+document.getElementById('btnCalVolver').addEventListener('click', () => ir(calSucActual === 'GENERAL' ? 'pantallaHistorialTipo' : 'pantallaAdministración'));
+
+// ── SUCURSALES ADMINISTRACIÓN (paso 1: elegir sucursal) ──
+const TIPO_LABEL = { diario: 'Pedido Diario', hipermaxi: 'Hipermaxi', mercado: 'Mercado' };
+
+document.querySelectorAll('#pantallaAdministración .suc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const suc = btn.dataset.suc;
+    const ico = btn.dataset.ico;
+    calSucActualIco = ico;
+    // Beni/Alemana/Zoológico solo tienen Diario — van directo al calendario,
+    // sin pasar por el selector de tipo. Hipermaxi y Mercado juntan siempre
+    // a todas las sucursales, así que solo viven en GENERAL.
+    if (suc !== 'GENERAL') { abrirCalendario(suc, ico, 'diario'); return; }
+    document.getElementById('htIco').textContent = ico;
+    document.getElementById('htNom').textContent = 'Todas las sucursales';
+    calSucActual = suc;
+    ir('pantallaHistorialTipo');
+  });
+});
+
+// ── TIPO DE PEDIDO (paso 2: elegir Diario/Hipermaxi/Mercado) ──
+document.querySelectorAll('#pantallaHistorialTipo .suc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    abrirCalendario(calSucActual, calSucActualIco, btn.dataset.tipo);
+  });
+});
+
+function abrirCalendario(suc, ico, tipo) {
+  calTipoActual = tipo;
+  document.getElementById('calIco').textContent = ico;
+  document.getElementById('calNom').textContent = suc === 'GENERAL' ? 'Todas las sucursales' : suc;
+  document.getElementById('calTipoNom').textContent = TIPO_LABEL[tipo];
+  ir('pantallaCalendario');
+  renderCalendario(suc);
+}
+
+// ── FILTROS APP ──
+window.setFiltro = function(f) {
+  filtroActual = f;
+  document.querySelectorAll('#pantallaApp .filtro-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('filtro-' + f).classList.add('activo');
+  renderVista();
+};
+
+function formatHora(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'});
+}
+function formatFecha(ts) {
+  if (!ts) return new Date().toLocaleDateString('es-BO');
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('es-BO') + ' ' + d.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Etiqueta combinada Sucursal - Área (ej: "Beni - Cocina")
+function labelSucursalArea(p) {
+  const suc  = p.sucursal || '';
+  const area = p.area || '';
+  return area ? `${suc} - ${area}` : suc;
+}
+
+// ── RENDER VISTAS ──
+function renderVista() {
+  if (filtroActual === 'pedido')    renderPedido();
+  else if (filtroActual === 'despachos') renderDespachos();
+  else if (filtroActual === 'entregas')  renderEntregas();
+}
+
+// ── PEDIDO (pendiente) ──
+function renderPedido() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado === 'pendiente' && esDiario(p));
+  if (!items.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">✅</span><p>Sin pedidos pendientes</p></div>`; return; }
+  lista.innerHTML = items.map(p => buildCardPendiente(p)).join('');
+}
+
+function buildCardPendiente(p) {
+  if (!tachados[p.id]) tachados[p.id] = new Set();
+  if (!notasItems[p.id]) notasItems[p.id] = {};
+  const total = p.items.length;
+  const hechos = tachados[p.id].size;
+  const todos  = hechos === total;
+  const pct    = total > 0 ? Math.round((hechos/total)*100) : 0;
+  return `
+  <div class="pedido-card" id="card-${p.id}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${formatHora(p.timestamp)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge pendiente">Pendiente</span>
+          <button class="btn-ampliar" onclick="abrirPantallaCompleta('${p.id}')" title="Pantalla completa">⛶</button>
+        </div>
+      </div>
+      <span class="pedido-sucursal">${p.sucursalIcono||'🏠'} ${labelSucursalArea(p)}</span>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-txt"><span>Preparación</span><span>${hechos}/${total}</span></div>
+      <div class="prog-bg"><div class="prog-bar" style="width:${pct}%"></div></div>
+    </div>
+    <div class="pedido-items">
+      ${p.items.map((it,idx) => ({it, idx})).sort((a,b) => compararItemsPorCategoria(a.it, b.it)).map(({it,idx}) => {
+        const nota = notasItems[p.id][idx]||'';
+        const tien = nota.length>0;
+        return `<div>
+          <div class="item-row ${tachados[p.id].has(idx)?'tachado':''}" onclick="toggleItem('${p.id}',${idx})">
+            <div class="item-check">${tachados[p.id].has(idx)?'✓':''}</div>
+            <span class="item-nombre">${it.nombre}</span>
+            <span class="item-qty">×${it.cantidad}</span>
+            <button class="item-nota-btn ${tien?'tiene-nota':''}" id="nBtn-${p.id}-${idx}"
+              onclick="event.stopPropagation();toggleNota('${p.id}',${idx})">${tien?'✎ Nota':'+ Nota'}</button>
+          </div>
+          ${it.observaciones?`<div style="padding:4px 12px 6px;font-size:12px;color:var(--oro);font-style:italic;background:var(--car)">📌 ${it.observaciones}</div>`:''}
+          <div class="item-nota-wrap ${tien?'visible':''}" id="nWrap-${p.id}-${idx}">
+            <textarea class="item-nota-input" rows="1" id="nInp-${p.id}-${idx}"
+              placeholder="Nota para este producto..."
+              oninput="guardarNota('${p.id}',${idx},this.value)">${nota}</textarea>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${p.nota?`<div class="nota-texto">📝 ${p.nota}</div>`:''}
+    <div class="acciones">
+      ${todos?`<div class="nombre-wrap">
+        <span class="nombre-label">Tu nombre — Entregué conforme</span>
+        <input type="text" class="nombre-input" id="nomEnt-${p.id}" placeholder="Escribí tu nombre..."/>
+      </div>`:''}
+      <button class="btn-confirmar" onclick="confirmarEntrega('${p.id}')" ${!todos?'disabled':''}>
+        <span>${todos?'Confirmar entrega':`Tachá todos los ítems (${hechos}/${total})`}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+// Refresca la tarjeta compacta y, si está abierta, la pantalla completa del mismo pedido
+function refrescarPedidoPendiente(pid) {
+  const p = pedidos.find(x => x.id===pid);
+  if (!p) return;
+  const el = document.getElementById('card-'+pid);
+  if (el) el.outerHTML = buildCardPendiente(p);
+  const full = document.getElementById('pedidoFullOverlay');
+  if (full && full.dataset.pid === pid) {
+    const nombreVal = (document.getElementById('nomEntFull-'+pid) || {}).value || '';
+    full.innerHTML = buildFullPantalla(p);
+    const inp = document.getElementById('nomEntFull-'+pid);
+    if (inp) inp.value = nombreVal;
+  }
+}
+
+window.toggleItem = function(pid, idx) {
+  if (!tachados[pid]) tachados[pid] = new Set();
+  tachados[pid].has(idx) ? tachados[pid].delete(idx) : tachados[pid].add(idx);
+  refrescarPedidoPendiente(pid);
+};
+
+window.toggleNota = function(pid, idx) {
+  const w = document.getElementById(`nWrap-${pid}-${idx}`);
+  const i = document.getElementById(`nInp-${pid}-${idx}`);
+  if (!w) return;
+  const v = w.classList.toggle('visible');
+  if (v && i) i.focus();
+};
+
+window.guardarNota = function(pid, idx, val) {
+  if (!notasItems[pid]) notasItems[pid] = {};
+  notasItems[pid][idx] = val;
+  const btn = document.getElementById(`nBtn-${pid}-${idx}`);
+  if (btn) { btn.textContent = val.trim()?'✎ Nota':'+ Nota'; btn.classList.toggle('tiene-nota', val.trim().length>0); }
+};
+
+async function _confirmarEntregaCore(pid, nombre, btn, spanSelector) {
+  if (btn) { btn.disabled = true; if (spanSelector) btn.querySelector(spanSelector).textContent = 'Confirmando...'; else btn.textContent = 'Confirmando...'; }
+  try {
+    const p = pedidos.find(x => x.id===pid);
+    const itemsConNota = p ? p.items.map((it,idx) => ({...it, notaAlmacen:(notasItems[pid]&&notasItems[pid][idx])||''})) : [];
+    await updateDoc(doc(db,'pedidos',pid), { estado:'entregado', entregadoPor:nombre, fechaEntrega:serverTimestamp(), items:itemsConNota });
+    mostrarToast('✦ Entrega confirmada — '+nombre);
+    cerrarPantallaCompleta();
+    setTimeout(()=>setFiltro('despachos'),800);
+  } catch(e) {
+    console.error(e); mostrarToast('Error al confirmar entrega');
+    if (btn) { btn.disabled = false; if (spanSelector) btn.querySelector(spanSelector).textContent = 'Confirmar entrega'; else btn.textContent = 'Confirmar entrega'; }
+  }
+}
+
+window.confirmarEntrega = async function(pid) {
+  const input  = document.getElementById('nomEnt-'+pid);
+  const nombre = input ? input.value.trim() : '';
+  if (!nombre) { mostrarToast('Escribí tu nombre para confirmar'); return; }
+  const btn = document.querySelector(`#card-${pid} .btn-confirmar`);
+  await _confirmarEntregaCore(pid, nombre, btn, 'span');
+};
+
+// ── PANTALLA COMPLETA POR PEDIDO ──
+function buildFullPantalla(p) {
+  if (!tachados[p.id]) tachados[p.id] = new Set();
+  if (!notasItems[p.id]) notasItems[p.id] = {};
+  const total = p.items.length;
+  const hechos = tachados[p.id].size;
+  const todos  = hechos === total;
+  const pct    = total > 0 ? Math.round((hechos/total)*100) : 0;
+  return `
+    <div class="pf-topbar">
+      <button class="pf-close" onclick="cerrarPantallaCompleta()">← Volver</button>
+      <span class="pf-badge">${p.sucursalIcono||'🏠'} ${labelSucursalArea(p)}</span>
+    </div>
+    <div class="pf-body">
+      <div class="pf-info">
+        <span class="pf-hora">🕐 ${formatHora(p.timestamp)}</span>
+      </div>
+      <div class="pf-progress">
+        <div class="pf-progress-txt"><span>Preparación</span><b>${hechos} / ${total}</b></div>
+        <div class="pf-progress-bg"><div class="pf-progress-bar" style="width:${pct}%"></div></div>
+      </div>
+      ${p.nota?`<div class="pf-nota-general">📝 ${p.nota}</div>`:''}
+      <div class="pf-items">
+        ${p.items.map((it,idx) => ({it, idx})).sort((a,b) => compararItemsPorCategoria(a.it, b.it)).map(({it,idx}) => {
+          const nota = notasItems[p.id][idx]||'';
+          const tien = nota.length>0;
+          const chk  = tachados[p.id].has(idx);
+          return `
+          <div class="pf-item ${chk?'tachado':''}" onclick="toggleItem('${p.id}',${idx})">
+            <div class="pf-item-row">
+              <div class="pf-item-check">${chk?'✓':''}</div>
+              <span class="pf-item-nombre">${it.nombre}</span>
+              <span class="pf-item-qty">×${it.cantidad}</span>
+              <button class="pf-nota-btn ${tien?'tiene-nota':''}" id="nBtnFull-${p.id}-${idx}"
+                onclick="event.stopPropagation();toggleNotaFull('${p.id}',${idx})">${tien?'✎ Nota':'+ Nota'}</button>
+            </div>
+            ${it.observaciones?`<div style="padding:2px 0 4px;font-size:13px;color:var(--oro);font-style:italic">📌 ${it.observaciones}</div>`:''}
+            <div class="pf-nota-wrap ${tien?'visible':''}" id="nWrapFull-${p.id}-${idx}" onclick="event.stopPropagation()">
+              <textarea class="pf-nota-input" rows="1" id="nInpFull-${p.id}-${idx}"
+                placeholder="Nota para este producto..."
+                oninput="guardarNotaFull('${p.id}',${idx},this.value)">${nota}</textarea>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="pf-footer">
+      ${todos?`
+        <span class="pf-nombre-label">Tu nombre — Entregué conforme</span>
+        <input type="text" class="pf-nombre-input" id="nomEntFull-${p.id}" placeholder="Escribí tu nombre...">
+      `:''}
+      <button class="pf-btn-confirmar" onclick="confirmarEntregaFull('${p.id}')" ${!todos?'disabled':''}>
+        ${todos?'✓ Confirmar entrega':`Tachá todos los ítems (${hechos}/${total})`}
+      </button>
+    </div>`;
+}
+
+window.abrirPantallaCompleta = function(pid) {
+  const p = pedidos.find(x => x.id===pid);
+  if (!p) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'pedido-full-overlay';
+  overlay.id = 'pedidoFullOverlay';
+  overlay.dataset.pid = pid;
+  overlay.innerHTML = buildFullPantalla(p);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+};
+
+window.cerrarPantallaCompleta = function() {
+  const o = document.getElementById('pedidoFullOverlay');
+  if (o) o.remove();
+  document.body.style.overflow = '';
+};
+
+window.toggleNotaFull = function(pid, idx) {
+  const w = document.getElementById(`nWrapFull-${pid}-${idx}`);
+  const i = document.getElementById(`nInpFull-${pid}-${idx}`);
+  if (!w) return;
+  const v = w.classList.toggle('visible');
+  if (v && i) i.focus();
+};
+
+window.guardarNotaFull = function(pid, idx, val) {
+  if (!notasItems[pid]) notasItems[pid] = {};
+  notasItems[pid][idx] = val;
+  const btn = document.getElementById(`nBtnFull-${pid}-${idx}`);
+  if (btn) { btn.textContent = val.trim()?'✎ Nota':'+ Nota'; btn.classList.toggle('tiene-nota', val.trim().length>0); }
+};
+
+window.confirmarEntregaFull = async function(pid) {
+  const input  = document.getElementById('nomEntFull-'+pid);
+  const nombre = input ? input.value.trim() : '';
+  if (!nombre) { mostrarToast('Escribí tu nombre para confirmar'); return; }
+  const btn = document.querySelector('.pf-btn-confirmar');
+  await _confirmarEntregaCore(pid, nombre, btn, null);
+};
+
+// ── DESPACHOS (entregado, esperando barra) ──
+function renderDespachos() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado==='entregado' && esDiario(p));
+  if (!items.length) { lista.innerHTML=`<div class="sin-pedidos"><span class="orn-v">✦</span><p>Sin despachos pendientes de confirmación</p></div>`; return; }
+  lista.innerHTML = items.map(p=>`
+  <div class="pedido-card" id="card-${p.id}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${formatHora(p.timestamp)}</span>
+        <span class="badge entregado">En espera de barra</span>
+      </div>
+      <span class="pedido-sucursal">${p.sucursalIcono||'🏠'} ${labelSucursalArea(p)}</span>
+    </div>
+    <div class="pedido-items">
+      ${p.items.map(it=>`
+        <div class="item-row tachado no-click">
+          <div class="item-check">✓</div>
+          <span class="item-nombre">${it.nombre}</span>
+          <span class="item-qty">×${it.cantidad}</span>
+        </div>
+        ${it.observaciones?`<div style="padding:4px 12px 6px;font-size:12px;color:var(--oro);font-style:italic;background:var(--car)">📌 ${it.observaciones}</div>`:''}
+        ${it.notaAlmacen?`<div style="padding:4px 12px 6px;font-size:12px;color:var(--oro);font-style:italic;background:var(--car)">✎ ${it.notaAlmacen}</div>`:''}
+      `).join('')}
+    </div>
+    ${p.nota?`<div class="nota-texto">📝 ${p.nota}</div>`:''}
+    <div class="nombres-box">
+      <div class="nombre-row"><span class="nombre-lbl">Entregó:</span><span class="nombre-val">${p.entregadoPor||'—'}</span></div>
+      <div class="nombre-row"><span class="nombre-lbl">Esperando:</span><span style="color:var(--mut);font-style:italic;font-size:13px">Barra — ${p.sucursal||''}</span></div>
+    </div>
+    <div class="acciones">
+      <button class="btn-deshacer" onclick="deshacerEntrega('${p.id}')">↩ Deshacer entrega</button>
+    </div>
+  </div>`).join('');
+}
+
+window.deshacerEntrega = async function(id) {
+  if (tachados[id]) tachados[id].clear();
+  await updateDoc(doc(db,'pedidos',id), { estado:'pendiente', entregadoPor:'', fechaEntrega:null });
+};
+
+// ── ENTREGAS (completado) — solo sucursal + fecha + excel ──
+function renderEntregas() {
+  const lista = document.getElementById('pedidosLista');
+  const items = pedidos.filter(p => p.estado==='completado' && esDiario(p));
+  if (!items.length) { lista.innerHTML=`<div class="sin-pedidos"><span class="orn-v">📭</span><p>Sin entregas completadas</p></div>`; return; }
+  lista.innerHTML = items.map(p=>`
+  <div class="entrega-simple" id="card-${p.id}">
+    <div class="es-info">
+      <span class="es-suc">${p.sucursalIcono||'🏠'} ${labelSucursalArea(p)}</span>
+      <span class="es-fecha">🕐 ${formatFecha(p.timestamp)}</span>
+      ${p.entregadoPor||p.recibidoPor?`<span style="font-size:11px;color:var(--mut);margin-top:4px;display:block;letter-spacing:1px">
+        ${p.entregadoPor?'Entregó: '+p.entregadoPor:''}${p.entregadoPor&&p.recibidoPor?' · ':''}${p.recibidoPor?'Recibió: '+p.recibidoPor:''}
+      </span>`:''}
+    </div>
+    <button class="es-dl" onclick="descargarExcel('${p.id}')">↓ Excel</button>
+  </div>`).join('');
+}
+
+// ── CONTADORES ──
+function actualizarContadores() {
+  const pend = pedidos.filter(p=>p.estado==='pendiente' && esDiario(p)).length;
+  const desp = pedidos.filter(p=>p.estado==='entregado' && esDiario(p)).length;
+  document.getElementById('countPedido').textContent = pend;
+  const cd = document.getElementById('countDespachos');
+  if (desp>0){cd.textContent=desp;cd.style.display='inline-flex';}else{cd.style.display='none';}
+  document.getElementById('subtitulo').textContent = pend>0?`${pend} pedido${pend>1?'s':''} en espera`:'Todo al día';
+}
+
+// ── CALENDARIO ──
+let calSucActual = '';
+let calSucActualIco = '';
+let calTipoActual = 'diario'; // 'diario' | 'hipermaxi' | 'mercado'
+let calAnioActual = new Date().getFullYear();
+let calDatos = {}; // {mesKey: {diaKey: [pedidos]}}
+
+function renderCalendario(sucursal) {
+  calSucActual = sucursal;
+  calAnioActual = new Date().getFullYear();
+  construirCalDatos();
+  dibujarCalendario();
+}
+
+// Según calTipoActual, elige de qué colección sacar los pedidos para el
+// calendario (Diario sigue viniendo de "pedidos", igual que siempre).
+function fuenteCalActual() {
+  if (calTipoActual === 'hipermaxi') return pedidosHiper;
+  if (calTipoActual === 'mercado')   return pedidosMercado;
+  return pedidos;
+}
+function pasaFiltroCal(p) {
+  return calTipoActual === 'diario' ? esDiario(p) : true;
+}
+
+// Agrupa pedidos YA CONFIRMADOS (grupoHiper/grupoMercado) por ese id, sin
+// asumir una cantidad fija de docs por sucursal. Así el Historial también
+// muestra correctamente las órdenes de antes de que existiera la separación
+// por Área (1 doc por sucursal) junto con las nuevas (hasta 2 por sucursal).
+function gruposConfirmadosFlat(fuente, campoGrupo) {
+  const grupos = {};
+  fuente.forEach(p => {
+    const gid = p[campoGrupo];
+    if (!gid) return;
+    if (!grupos[gid]) grupos[gid] = [];
+    grupos[gid].push(p);
+  });
+  return grupos;
+}
+
+// Fusiona los items de TODOS los docs de un grupo (Hiper o Mercado), sumando
+// cantidades por producto — sin importar de qué sucursal/área vino cada uno.
+function fusionarItemsGrupo(docs) {
+  const mapa = {};
+  docs.forEach(p => (p.items || []).forEach(it => {
+    if (!mapa[it.nombre]) mapa[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', cat: it.cat || '', cantidad: 0 };
+    mapa[it.nombre].cantidad += (it.cantidad || 0);
+  }));
+  return Object.values(mapa).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+function construirCalDatos() {
+  calDatos = {};
+  if (calTipoActual === 'diario') {
+    const filtrados = calSucActual==='GENERAL'
+      ? pedidos.filter(esDiario)
+      : pedidos.filter(p => p.sucursal===calSucActual && esDiario(p));
+    filtrados.forEach(p => {
+      if (!p.timestamp) return;
+      const d = p.timestamp.toDate ? p.timestamp.toDate() : new Date(p.timestamp);
+      const mesKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const diaKey = String(d.getDate()).padStart(2,'0');
+      if (!calDatos[mesKey]) calDatos[mesKey] = {};
+      if (!calDatos[mesKey][diaKey]) calDatos[mesKey][diaKey] = [];
+      calDatos[mesKey][diaKey].push(p);
+    });
+    return;
+  }
+  // Hipermaxi / Mercado: el calendario se arma a partir de las entregas YA
+  // CONFIRMADAS (grupoHiper/grupoMercado) — ahí es donde viven los precios,
+  // el monto entregado y el cambio. Un grupo confirmado siempre junta a
+  // todas las sucursales, así que filtrar "por sucursal" solo decide si esa
+  // sucursal participó del grupo (en la práctica, siempre que sea válido).
+  const campoGrupo = calTipoActual === 'hipermaxi' ? 'grupoHiper' : 'grupoMercado';
+  const grupos = gruposConfirmadosFlat(fuenteCalActual(), campoGrupo);
+  Object.entries(grupos).forEach(([gid, docs]) => {
+    if (calSucActual !== 'GENERAL' && !docs.some(d => d.sucursal === calSucActual)) return;
+    const fechas = docs.map(d => tsToDate(d.timestamp)).filter(d => d.getTime() > 0);
+    if (!fechas.length) return;
+    const fecha = new Date(Math.max(...fechas.map(f => f.getTime())));
+    const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth()+1).padStart(2,'0')}`;
+    const diaKey = String(fecha.getDate()).padStart(2,'0');
+    if (!calDatos[mesKey]) calDatos[mesKey] = {};
+    if (!calDatos[mesKey][diaKey]) calDatos[mesKey][diaKey] = [];
+    calDatos[mesKey][diaKey].push({ gid, docs, items: fusionarItemsGrupo(docs) });
+  });
+}
+
+function dibujarCalendario() {
+  const body  = document.getElementById('calBody');
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const DIAS  = ['L','M','X','J','V','S','D'];
+  const hoy   = new Date();
+
+  let html = `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="cambiarAnio(-1)">‹</button>
+      <span class="cal-anio">${calAnioActual}</span>
+      <button class="cal-nav-btn" onclick="cambiarAnio(1)">›</button>
+    </div>
+    <div class="cal-grid">`;
+
+  for (let m = 0; m < 12; m++) {
+    const mesKey  = `${calAnioActual}-${String(m+1).padStart(2,'0')}`;
+    const diasMes = calDatos[mesKey] || {};
+    const tienePedidos = Object.keys(diasMes).length > 0;
+
+    // Primer día del mes (0=Dom → ajustar a Lun=0)
+    const primerDia = new Date(calAnioActual, m, 1).getDay();
+    const offset    = primerDia === 0 ? 6 : primerDia - 1;
+    const totalDias = new Date(calAnioActual, m+1, 0).getDate();
+
+    let diasHTML = DIAS.map(d => `<div class="cal-dhdr">${d}</div>`).join('');
+    let celdas   = '';
+
+    // Celdas vacías al inicio
+    for (let i = 0; i < offset; i++) celdas += `<div class="cal-d vacio"></div>`;
+
+    for (let d = 1; d <= totalDias; d++) {
+      const dKey  = String(d).padStart(2,'0');
+      const tiene = !!diasMes[dKey];
+      const esHoy = hoy.getFullYear()===calAnioActual && hoy.getMonth()===m && hoy.getDate()===d;
+      const npeds = tiene ? diasMes[dKey].length : 0;
+      celdas += `<div class="cal-d${tiene?' con-pedido':''}${esHoy?' hoy':''}"
+        ${tiene?`onclick="abrirModalDia('${mesKey}','${dKey}')"`:''} 
+        title="${tiene?npeds+' pedido'+( npeds>1?'s':''):''}">
+        ${d}
+      </div>`;
+    }
+
+    html += `
+      <div class="cal-mes-box${tienePedidos?' tiene-datos':''}">
+        <div class="cal-mes-nom${tienePedidos?' tiene-datos':''}">${MESES[m]}</div>
+        <div class="cal-dias-hdr">${diasHTML}</div>
+        <div class="cal-dias">${celdas}</div>
+        ${tienePedidos ? `
+        <div class="cal-mes-dl">
+          <button class="btn-mes-xl" onclick="dlMes('${calSucActual}','${mesKey}')">↓ Excel del mes</button>
+        </div>` : ''}
+      </div>`;
+  }
+
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+window.cambiarAnio = function(delta) {
+  calAnioActual += delta;
+  dibujarCalendario();
+};
+
+window.abrirModalDia = function(mesKey, dia) {
+  const [anio, mes] = mesKey.split('-');
+  const diasData = calDatos[mesKey] && calDatos[mesKey][dia] ? calDatos[mesKey][dia] : [];
+  const MESES_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const nomFecha = `${parseInt(dia)} de ${MESES_FULL[parseInt(mes)-1]} ${anio}`;
+  const npeds = diasData.length;
+  const nitems = diasData.reduce((s,p)=>s+p.items.reduce((ss,it)=>ss+it.cantidad,0),0);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cal-overlay';
+  overlay.id = 'calOverlay';
+  overlay.innerHTML = `
+    <div class="cal-modal">
+      <div class="cal-modal-fecha">${parseInt(dia)}</div>
+      <div class="cal-modal-sub">${nomFecha}</div>
+      <div class="cal-modal-info">
+        ${npeds} pedido${npeds>1?'s':''} · ${nitems} unidades totales
+      </div>
+      <button class="btn-dl-dia" onclick="dlDia('${calSucActual}','${mesKey}','${dia}');cerrarModalDia()">
+        ↓ Descargar Excel del día
+      </button>
+      <button class="btn-modal-close" onclick="cerrarModalDia()">Cerrar</button>
+    </div>`;
+  overlay.addEventListener('click', e => { if(e.target===overlay) cerrarModalDia(); });
+  document.body.appendChild(overlay);
+};
+
+window.cerrarModalDia = function() {
+  const o = document.getElementById('calOverlay');
+  if (o) o.remove();
+};
+
+// ── EXCEL DÍA ──
+window.dlDia = async function(sucursal, mesKey, dia) {
+  const [anio, mes] = mesKey.split('-');
+  const fechaStr = `${dia}/${mes}/${anio}`;
+  const sucStr   = sucursal==='GENERAL'?'TODAS LAS SUCURSALES':sucursal.toUpperCase();
+
+  if (calTipoActual !== 'diario') {
+    const gruposDelDia = (calDatos[mesKey] && calDatos[mesKey][dia]) || [];
+    if (!gruposDelDia.length) { mostrarToast('Sin datos para ese día', true); return; }
+    const prefijo = calTipoActual === 'hipermaxi' ? 'hiper_' : 'mercado_';
+    const nombreArchivo = `${prefijo}${sucursal}_${dia}-${mes}-${anio}`;
+    // Un solo grupo confirmado ese día (lo normal): el Excel real completo
+    // con las 3 (o 4) sucursales, precios, monto entrega y cambio — igual
+    // que el que se descarga al confirmar la entrega.
+    if (gruposDelDia.length === 1) {
+      const { docs, gid } = gruposDelDia[0];
+      if (calTipoActual === 'hipermaxi') await generarExcelHistorialHiper(docs, gid);
+      else await generarExcelHistorialMercado(docs, gid);
+    } else {
+      // Más de un grupo confirmado el mismo día (caso raro): versión
+      // simplificada, ya que un solo monto entrega/cambio no representaría
+      // a ambos.
+      await generarExcelHistorialSimplificado(calTipoActual, gruposDelDia, sucStr, fechaStr, nombreArchivo);
+    }
+    mostrarToast('✦ Excel del día descargado');
+    return;
+  }
+
+  // ── Diario (igual que siempre) ──
+  const fuente = fuenteCalActual();
+  const filtrados = sucursal==='GENERAL'
+    ? fuente.filter(p => { if(!p.timestamp || !pasaFiltroCal(p))return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey && String(d.getDate()).padStart(2,'0')===dia; })
+    : fuente.filter(p => { if(!p.timestamp||p.sucursal!==sucursal||!pasaFiltroCal(p))return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey && String(d.getDate()).padStart(2,'0')===dia; });
+
+  // Acumular por producto para el día
+  const acum = {};
+  filtrados.forEach(p => p.items.forEach(it => {
+    const k = it.nombre;
+    if (!acum[k]) acum[k] = {...it, cantidad:0};
+    acum[k].cantidad += it.cantidad;
+  }));
+
+  const itemsDia = Object.values(acum);
+  // Tomar nombres del primer pedido completado del día
+  const pConNombres = filtrados.find(p => p.entregadoPor || p.recibidoPor);
+  itemsDia._entregadoPor = pConNombres ? (pConNombres.entregadoPor || '') : '';
+  itemsDia._recibidoPor  = pConNombres ? (pConNombres.recibidoPor  || '') : '';
+  await generarExcel(itemsDia, sucStr, fechaStr, `pedido_${sucursal}_${dia}-${mes}-${anio}`);
+  mostrarToast('✦ Excel del día descargado');
+};
+
+// ── EXCEL MES ──
+window.dlMes = async function(sucursal, mesKey) {
+  const [anio, mes] = mesKey.split('-');
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const nomMes = meses[parseInt(mes)-1] + ' ' + anio;
+  const sucStr = sucursal==='GENERAL'?'TODAS LAS SUCURSALES':sucursal.toUpperCase();
+
+  if (calTipoActual !== 'diario') {
+    // Mes: siempre versión simplificada (junta varios días con precios
+    // distintos, no tiene sentido un solo monto entrega/cambio).
+    const gruposDelMes = Object.values(calDatos[mesKey] || {}).flat();
+    const prefijo = calTipoActual === 'hipermaxi' ? 'administracion_hiper_' : 'administracion_mercado_';
+    await generarExcelHistorialSimplificado(calTipoActual, gruposDelMes, sucStr, 'MES: '+nomMes, `${prefijo}${sucursal}_${mes}-${anio}`);
+    mostrarToast('✦ Excel del mes descargado');
+    return;
+  }
+
+  // ── Diario (igual que siempre) ──
+  const fuente = fuenteCalActual();
+  const prefijo = 'administracion_';
+  const filtrados = sucursal==='GENERAL'
+    ? fuente.filter(p => { if(!p.timestamp || !pasaFiltroCal(p))return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey; })
+    : fuente.filter(p => { if(!p.timestamp||p.sucursal!==sucursal||!pasaFiltroCal(p))return false; const d=p.timestamp.toDate?p.timestamp.toDate():new Date(p.timestamp); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===mesKey; });
+
+  // Acumular totales del mes
+  const acum = {};
+  filtrados.forEach(p => p.items.forEach(it => {
+    const k = it.nombre;
+    if (!acum[k]) acum[k] = {...it, cantidad:0};
+    acum[k].cantidad += it.cantidad;
+  }));
+
+  const itemsMes = Object.values(acum);
+  itemsMes._entregadoPor = '';
+  itemsMes._recibidoPor  = '';
+  await generarExcel(itemsMes, sucStr, 'MES: '+nomMes, `${prefijo}${sucursal}_${mes}-${anio}`);
+  mostrarToast('✦ Excel del mes descargado');
+};
+
+// ── GENERADOR EXCEL COMPARTIDO (ExcelJS) ──
+async function generarExcel(items, sucursal, fecha, nombreArchivo, notaHeader) {
+  notaHeader = notaHeader || 'NOTA RECEPCIÓN';
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Pedido', {pageSetup:{fitToPage:true,fitToWidth:1}});
+
+  const AZUL_OSC  = {argb:'FF1F3864'};
+  const AZUL_MED  = {argb:'FF2E5AA8'};
+  const AZUL_CLAR = {argb:'FFD6E4F7'};
+  const GRIS_MED  = {argb:'FFE0E0E0'};
+  const BLANCO    = {argb:'FFFFFFFF'};
+  const NEGRO     = {argb:'FF000000'};
+  const sf = c => ({type:'pattern',pattern:'solid',fgColor:c});
+  const bT = {style:'thin',  color:{argb:'FF000000'}};
+  const bM = {style:'medium',color:{argb:'FF000000'}};
+  const bH = {style:'hair',  color:{argb:'FFCCCCCC'}};
+  const allT = {top:bT,bottom:bT,left:bT,right:bT};
+  const allM = {top:bM,bottom:bM,left:bM,right:bM};
+  const softB= {top:bH,bottom:bH,left:bH,right:bH};
+
+  ws.columns = [{width:6},{width:30},{width:16},{width:10},{width:10},{width:22},{width:24},{width:24}];
+  ws.getRow(1).height = 6;
+
+  // Título
+  ws.getRow(2).height = 36;
+  ws.mergeCells('A2:H2');
+  const t = ws.getCell('A2');
+  t.value='LISTA DE PEDIDOS'; t.font={bold:true,size:18,name:'Arial',color:BLANCO};
+  t.fill=sf(AZUL_OSC); t.alignment={horizontal:'center',vertical:'middle'}; t.border=allM;
+
+  ws.getRow(3).height = 10;
+
+  // Sucursal / Fecha
+  ws.getRow(4).height = 28;
+  ws.mergeCells('B4:C4'); ws.mergeCells('F4:H4');
+  const sCell = ws.getCell('B4');
+  sCell.value='SUCURSAL:  '+sucursal; sCell.font={bold:true,size:12,name:'Arial',color:AZUL_MED};
+  sCell.fill=sf(AZUL_CLAR); sCell.alignment={horizontal:'left',vertical:'middle'}; sCell.border=allM;
+  ws.getCell('A4').fill=sf(GRIS_MED); ws.getCell('A4').border=allT;
+  ws.getCell('D4').border={top:bT,bottom:bT};
+  const eCell = ws.getCell('E4');
+  eCell.value='FECHA:'; eCell.font={bold:true,size:11,name:'Arial',color:AZUL_OSC};
+  eCell.fill=sf(GRIS_MED); eCell.alignment={horizontal:'left',vertical:'middle'}; eCell.border=allT;
+  const fCell = ws.getCell('F4');
+  fCell.value=fecha; fCell.font={size:11,name:'Arial',color:AZUL_MED};
+  fCell.fill=sf(AZUL_CLAR); fCell.alignment={horizontal:'center',vertical:'middle'}; fCell.border=allT;
+
+  ws.getRow(5).height = 10;
+
+  // Headers
+  ws.getRow(6).height = 22;
+  const HDRS = ['ID','PRODUCTO','CATEGORÍA','UNIDAD','CANTIDAD','OBSERVACIONES','NOTA ALMACÉN',notaHeader];
+  HDRS.forEach((h,i) => {
+    const c = ws.getRow(6).getCell(i+1);
+    c.value=h; c.font={bold:true,size:10,name:'Arial',color:BLANCO};
+    c.fill=sf(AZUL_MED); c.alignment={horizontal:'center',vertical:'middle'}; c.border=allT;
+  });
+
+  // Datos
+  items.forEach((it,i) => {
+    const r = 7+i;
+    ws.getRow(r).height = 18;
+    const bg = i%2===0 ? BLANCO : AZUL_CLAR;
+    const vals = [it.num||'',it.nombre||'',it.cat||'',it.unidad||'UNIDAD',it.cantidad,it.observaciones||'',it.notaAlmacen||'',it.notaRecepcion||''];
+    const alns = ['center','left','left','center','center','left','left','left'];
+    vals.forEach((v,ci) => {
+      const c = ws.getRow(r).getCell(ci+1);
+      c.value=v; c.font={size:10,name:'Arial',color:NEGRO};
+      c.fill=sf(bg); c.alignment={horizontal:alns[ci],vertical:'middle',wrapText:ci===5||ci===6||ci===7}; c.border=allT;
+    });
+  });
+
+  // Filas vacías después de datos + definir fila de firmas
+  const firmaRow = 7 + items.length + 3;
+  for (let r=7+items.length; r<firmaRow; r++) {
+    ws.getRow(r).height=14;
+    for (let c=1;c<=8;c++) ws.getRow(r).getCell(c).border=softB;
+  }
+
+  // Firmas
+  const fr = firmaRow;
+  ws.getRow(fr).height=26; ws.getRow(fr+2).height=28; ws.getRow(fr+3).height=18;
+  ws.mergeCells(`B${fr}:C${fr}`);
+  const rb=ws.getCell(`B${fr}`); rb.value='RECIBÍ CONFORME'; rb.font={bold:true,size:11,name:'Arial',color:AZUL_OSC}; rb.fill=sf(GRIS_MED); rb.alignment={horizontal:'center',vertical:'middle'}; rb.border=allM;
+  ws.mergeCells(`E${fr}:H${fr}`);
+  const eb=ws.getCell(`E${fr}`); eb.value='ENTREGUÉ CONFORME'; eb.font={bold:true,size:11,name:'Arial',color:AZUL_OSC}; eb.fill=sf(GRIS_MED); eb.alignment={horizontal:'center',vertical:'middle'}; eb.border=allM;
+  ws.mergeCells(`B${fr+2}:C${fr+2}`);
+  ws.getCell(`B${fr+2}`).value = items._recibidoPor || '________________________';
+  ws.getCell(`B${fr+2}`).font = {bold:true,size:12,name:'Arial'};
+  ws.getCell(`B${fr+2}`).border={bottom:bM}; ws.getCell(`B${fr+2}`).alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(`E${fr+2}:H${fr+2}`);
+  ws.getCell(`E${fr+2}`).value = items._entregadoPor || '________________________';
+  ws.getCell(`E${fr+2}`).font = {bold:true,size:12,name:'Arial'};
+  ws.getCell(`E${fr+2}`).border={bottom:bM}; ws.getCell(`E${fr+2}`).alignment={horizontal:'center',vertical:'middle'};
+  ws.mergeCells(`B${fr+3}:C${fr+3}`);
+  ws.getCell(`B${fr+3}`).value='Nombre y firma'; ws.getCell(`B${fr+3}`).font={italic:true,size:9,name:'Arial',color:{argb:'FF888888'}}; ws.getCell(`B${fr+3}`).alignment={horizontal:'center'};
+  ws.mergeCells(`E${fr+3}:H${fr+3}`);
+  ws.getCell(`E${fr+3}`).value='Nombre y firma'; ws.getCell(`E${fr+3}`).font={italic:true,size:9,name:'Arial',color:{argb:'FF888888'}}; ws.getCell(`E${fr+3}`).alignment={horizontal:'center'};
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=nombreArchivo+'.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════ HISTORIAL HIPER/MERCADO — EXCEL POR GRUPO (formato real) ══════════
+// Reproduce el mismo formato que ya se genera al confirmar una entrega (stock
+// por sucursal, P.U., P. Total, Monto entrega, Cambio y "Recibió X"), pero
+// arma todo desde la lista PLANA de docs del grupo (no la estructura anidada
+// por área) — así funciona igual con pedidos nuevos (2 áreas por sucursal) y
+// con pedidos viejos de antes de la separación por Área (1 doc por sucursal).
+async function generarExcelHistorialHiper(docs, gid) {
+  const precios = (preciosHiperCache[gid] && preciosHiperCache[gid].precios) || {};
+  const montoEntregado = preciosHiperCache[gid] && preciosHiperCache[gid].montoEntregado != null ? preciosHiperCache[gid].montoEntregado : null;
+
+  const mapa = {};
+  docs.forEach(p => (p.items || []).forEach(it => {
+    if (!mapa[it.nombre]) mapa[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', observaciones: [], porSucursal: { Beni: 0, Alemana: 0, 'Zoológico': 0 }, total: 0 };
+    mapa[it.nombre].porSucursal[p.sucursal] = (mapa[it.nombre].porSucursal[p.sucursal] || 0) + (it.cantidad || 0);
+    mapa[it.nombre].total += (it.cantidad || 0);
+    if (it.observaciones) mapa[it.nombre].observaciones.push(`${labelSucursalArea(p)}: ${it.observaciones}`);
+  }));
+  const items = Object.values(mapa).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+
+  const wb = new ExcelJS.Workbook();
+  wb.calcProperties.fullCalcOnLoad = true;
+  const ws = wb.addWorksheet('Lista Hipermaxi', { pageSetup: { fitToPage: true, fitToWidth: 1 } });
+
+  const ROJO = { argb: 'FFCC0000' };
+  const GRIS = { argb: 'FFE0E0E0' };
+  const sf = c => ({ type: 'pattern', pattern: 'solid', fgColor: c });
+  const bT = { style: 'thin', color: { argb: 'FF000000' } };
+  const allT = { top: bT, bottom: bT, left: bT, right: bT };
+
+  ws.columns = [
+    { width: 3 }, { width: 26 }, { width: 8 },
+    { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 },
+    { width: 8 }, { width: 8 }, { width: 10 }, { width: 22 }, { width: 22 }
+  ];
+
+  ws.mergeCells('B3:I3');
+  const t = ws.getCell('B3');
+  t.value = 'LISTA HIPERMAXI'; t.font = { bold: true, size: 16, name: 'Arial' };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  const fechaMasReciente = Math.max(...docs.map(d => tsToDate(d.timestamp).getTime()));
+  ws.mergeCells('J3:N3');
+  const fc = ws.getCell('J3');
+  fc.value = 'Fecha: ' + (isFinite(fechaMasReciente) ? new Date(fechaMasReciente).toLocaleDateString('es-BO') : '—');
+  fc.font = { bold: true, size: 11, name: 'Arial' };
+  fc.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  ws.mergeCells('D5:E5'); ws.getCell('D5').value = 'Stock'; ws.getCell('D5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('D5').alignment = { horizontal: 'center' };
+  ws.mergeCells('F5:G5'); ws.getCell('F5').value = 'Stock'; ws.getCell('F5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('F5').alignment = { horizontal: 'center' };
+  ws.mergeCells('H5:I5'); ws.getCell('H5').value = 'Stock'; ws.getCell('H5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('H5').alignment = { horizontal: 'center' };
+
+  const hdr6 = ['', 'PRODUCTO', '', 'ZOO', 'check', 'BENI', 'check', 'ALEMANA', 'check', 'total', 'P.U.', 'P. Total', 'Observaciones', 'NOTA ALMACÉN'];
+  hdr6.forEach((h, i) => {
+    if (!h) return;
+    const c = ws.getRow(6).getCell(i + 1);
+    c.value = h; c.font = { bold: true, size: 9, name: 'Arial' };
+    c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    c.border = allT; c.fill = sf(GRIS);
+  });
+
+  let r = 7;
+  let totalGeneral = 0;
+  items.forEach(it => {
+    ws.getCell(`B${r}`).value = it.nombre;
+    ws.getCell(`C${r}`).value = it.unidad;
+    ws.getCell(`D${r}`).value = it.porSucursal['Zoológico'] || 0;
+    ws.getCell(`F${r}`).value = it.porSucursal.Beni || 0;
+    ws.getCell(`H${r}`).value = it.porSucursal.Alemana || 0;
+    ws.getCell(`J${r}`).value = it.total;
+    const pu = precios[it.nombre];
+    if (pu != null) {
+      const pTotal = it.total * pu;
+      ws.getCell(`K${r}`).value = pu;
+      ws.getCell(`L${r}`).value = { formula: `J${r}*K${r}`, result: pTotal };
+      totalGeneral += pTotal;
+    }
+    ws.getCell(`M${r}`).value = it.observaciones.join(' · ');
+    ws.getCell(`N${r}`).value = '';
+    ['B','C','D','E','F','G','H','I','J','K','L','M','N'].forEach(col => {
+      const c = ws.getCell(`${col}${r}`);
+      c.border = allT; c.font = { size: 9, name: 'Arial' };
+      c.alignment = { horizontal: col === 'B' ? 'left' : 'center', vertical: 'middle' };
+    });
+    r++;
+  });
+
+  const filaDatosFin = r - 1;
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'TOTAL'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`L${r}`).value = { formula: `SUM(L7:L${filaDatosFin})`, result: totalGeneral }; ws.getCell(`L${r}`).font = { bold: true, size: 10 }; ws.getCell(`L${r}`).border = allT;
+
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'MONTO ENTREGA'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  if (montoEntregado != null) ws.getCell(`L${r}`).value = montoEntregado;
+  ws.getCell(`L${r}`).border = allT;
+  const filaMonto = r;
+
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'CAMBIO'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`L${r}`).value = { formula: `L${filaMonto}-L${filaMonto - 1}`, result: montoEntregado != null ? (montoEntregado - totalGeneral) : 0 };
+  ws.getCell(`L${r}`).fill = sf(GRIS); ws.getCell(`L${r}`).border = allT;
+
+  r += 2;
+  docs.forEach(d => {
+    const c = ws.getCell(`B${r}`);
+    c.value = `Recibió ${labelSucursalArea(d)}: ${d.recibidoPor || '________________________'}`;
+    c.font = { size: 10, name: 'Arial' };
+    r++;
+  });
+  r += 1;
+  const entregadoPorH = docs.map(d => d.entregadoPor).find(Boolean) || '________________________';
+  const ecH = ws.getCell(`B${r}`);
+  ecH.value = `Entregó Conforme: ${entregadoPorH}`;
+  ecH.font = { bold: true, size: 10, name: 'Arial' };
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'lista_hipermaxi_' + new Date().toLocaleDateString('es-BO').replace(/\//g, '-') + '.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function generarExcelHistorialMercado(docs, gid) {
+  const precios = (preciosMercadoCache[gid] && preciosMercadoCache[gid].precios) || {};
+  const montoEntregado = preciosMercadoCache[gid] && preciosMercadoCache[gid].montoEntregado != null ? preciosMercadoCache[gid].montoEntregado : null;
+
+  const mapa = {};
+  docs.forEach(p => (p.items || []).forEach(it => {
+    if (!mapa[it.nombre]) mapa[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', observaciones: [], porSucursal: { Beni: 0, Alemana: 0, 'Zoológico': 0, 'Galpón': 0 }, total: 0 };
+    mapa[it.nombre].porSucursal[p.sucursal] = (mapa[it.nombre].porSucursal[p.sucursal] || 0) + (it.cantidad || 0);
+    mapa[it.nombre].total += (it.cantidad || 0);
+    if (it.observaciones) mapa[it.nombre].observaciones.push(`${labelSucursalArea(p)}: ${it.observaciones}`);
+  }));
+  const items = Object.values(mapa).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+
+  const wb = new ExcelJS.Workbook();
+  wb.calcProperties.fullCalcOnLoad = true;
+  const ws = wb.addWorksheet('Lista Mercado', { pageSetup: { fitToPage: true, fitToWidth: 1 } });
+
+  const ROJO = { argb: 'FFCC0000' };
+  const GRIS = { argb: 'FFE0E0E0' };
+  const sf = c => ({ type: 'pattern', pattern: 'solid', fgColor: c });
+  const bT = { style: 'thin', color: { argb: 'FF000000' } };
+  const allT = { top: bT, bottom: bT, left: bT, right: bT };
+
+  ws.columns = [
+    { width: 3 }, { width: 26 }, { width: 8 },
+    { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 }, { width: 8 },
+    { width: 8 }, { width: 8 }, { width: 10 }, { width: 22 }, { width: 22 }
+  ];
+
+  ws.mergeCells('B3:K3');
+  const t = ws.getCell('B3');
+  t.value = 'LISTA DE PEDIDOS DE MERCADO'; t.font = { bold: true, size: 16, name: 'Arial' };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  const fechaMasReciente = Math.max(...docs.map(d => tsToDate(d.timestamp).getTime()));
+  ws.mergeCells('L3:P3');
+  const fc = ws.getCell('L3');
+  fc.value = 'Fecha: ' + (isFinite(fechaMasReciente) ? new Date(fechaMasReciente).toLocaleDateString('es-BO') : '—');
+  fc.font = { bold: true, size: 11, name: 'Arial' };
+  fc.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  ws.mergeCells('D5:E5'); ws.getCell('D5').value = 'Stock'; ws.getCell('D5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('D5').alignment = { horizontal: 'center' };
+  ws.mergeCells('F5:G5'); ws.getCell('F5').value = 'Stock'; ws.getCell('F5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('F5').alignment = { horizontal: 'center' };
+  ws.mergeCells('H5:I5'); ws.getCell('H5').value = 'Stock'; ws.getCell('H5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('H5').alignment = { horizontal: 'center' };
+  ws.mergeCells('J5:K5'); ws.getCell('J5').value = 'Stock'; ws.getCell('J5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('J5').alignment = { horizontal: 'center' };
+
+  const hdr6 = ['', 'PRODUCTO', '', 'ZOO', 'check', 'BENI', 'check', 'ALE', 'check', 'GALPO', 'check', 'total', 'P.U.', 'P. Total', 'Observaciones', 'NOTA ALMACÉN'];
+  hdr6.forEach((h, i) => {
+    if (!h) return;
+    const c = ws.getRow(6).getCell(i + 1);
+    c.value = h; c.font = { bold: true, size: 9, name: 'Arial' };
+    c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    c.border = allT; c.fill = sf(GRIS);
+  });
+
+  let r = 7;
+  let totalGeneral = 0;
+  items.forEach(it => {
+    ws.getCell(`B${r}`).value = it.nombre;
+    ws.getCell(`C${r}`).value = it.unidad;
+    ws.getCell(`D${r}`).value = it.porSucursal['Zoológico'] || 0;
+    ws.getCell(`F${r}`).value = it.porSucursal.Beni || 0;
+    ws.getCell(`H${r}`).value = it.porSucursal.Alemana || 0;
+    ws.getCell(`J${r}`).value = it.porSucursal['Galpón'] || 0;
+    ws.getCell(`L${r}`).value = it.total;
+    const pu = precios[it.nombre];
+    if (pu != null) {
+      const pTotal = it.total * pu;
+      ws.getCell(`M${r}`).value = pu;
+      ws.getCell(`N${r}`).value = { formula: `L${r}*M${r}`, result: pTotal };
+      totalGeneral += pTotal;
+    }
+    ws.getCell(`O${r}`).value = it.observaciones.join(' · ');
+    ws.getCell(`P${r}`).value = '';
+    ['B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'].forEach(col => {
+      const c = ws.getCell(`${col}${r}`);
+      c.border = allT; c.font = { size: 9, name: 'Arial' };
+      c.alignment = { horizontal: col === 'B' ? 'left' : 'center', vertical: 'middle' };
+    });
+    r++;
+  });
+
+  const filaDatosFin = r - 1;
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'TOTAL'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`N${r}`).value = { formula: `SUM(N7:N${filaDatosFin})`, result: totalGeneral }; ws.getCell(`N${r}`).font = { bold: true, size: 10 }; ws.getCell(`N${r}`).border = allT;
+
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'MONTO ENTREGA'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  if (montoEntregado != null) ws.getCell(`N${r}`).value = montoEntregado;
+  ws.getCell(`N${r}`).border = allT;
+  const filaMonto = r;
+
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'CAMBIO'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`N${r}`).value = { formula: `N${filaMonto}-N${filaMonto - 1}`, result: montoEntregado != null ? (montoEntregado - totalGeneral) : 0 };
+  ws.getCell(`N${r}`).fill = sf(GRIS); ws.getCell(`N${r}`).border = allT;
+
+  r += 2;
+  docs.forEach(d => {
+    const c = ws.getCell(`B${r}`);
+    c.value = `Recibió ${labelSucursalArea(d)}: ${d.recibidoPor || '________________________'}`;
+    c.font = { size: 10, name: 'Arial' };
+    r++;
+  });
+  r += 1;
+  const entregadoPorM = docs.map(d => d.entregadoPor).find(Boolean) || '________________________';
+  const ecM = ws.getCell(`B${r}`);
+  ecM.value = `Entregó Conforme: ${entregadoPorM}`;
+  ecM.font = { bold: true, size: 10, name: 'Arial' };
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'lista_mercado_' + new Date().toLocaleDateString('es-BO').replace(/\//g, '-') + '.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════ HISTORIAL HIPER/MERCADO — EXCEL SIMPLIFICADO (General / Mes) ══════════
+// Solo cantidades + monto (P.U. × cantidad) por producto y un TOTAL — sin
+// desglose por sucursal, sin monto entregado, sin cambio y sin nombres de
+// quién recibió/entregó (se usa cuando se juntan varios días/grupos, donde
+// esos datos administrativos ya no tienen un único valor que mostrar).
+async function generarExcelHistorialSimplificado(tipo, grupos, sucStr, fechaStr, nombreArchivo) {
+  const cacheFuente = tipo === 'hipermaxi' ? preciosHiperCache : preciosMercadoCache;
+  const acum = {};
+  let totalGeneral = 0;
+  grupos.forEach(g => {
+    const precios = (cacheFuente[g.gid] && cacheFuente[g.gid].precios) || {};
+    (g.items || []).forEach(it => {
+      if (!acum[it.nombre]) acum[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', cantidad: 0, monto: 0 };
+      acum[it.nombre].cantidad += it.cantidad;
+      const pu = precios[it.nombre];
+      if (pu != null) { const m = pu * it.cantidad; acum[it.nombre].monto += m; totalGeneral += m; }
+    });
+  });
+  const items = Object.values(acum).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Historial', { pageSetup: { fitToPage: true, fitToWidth: 1 } });
+
+  const AZUL_OSC = { argb: 'FF1F3864' };
+  const AZUL_MED = { argb: 'FF2E5AA8' };
+  const AZUL_CLAR = { argb: 'FFD6E4F7' };
+  const GRIS_MED = { argb: 'FFE0E0E0' };
+  const BLANCO = { argb: 'FFFFFFFF' };
+  const NEGRO = { argb: 'FF000000' };
+  const sf = c => ({ type: 'pattern', pattern: 'solid', fgColor: c });
+  const bT = { style: 'thin', color: { argb: 'FF000000' } };
+  const bM = { style: 'medium', color: { argb: 'FF000000' } };
+  const allT = { top: bT, bottom: bT, left: bT, right: bT };
+  const allM = { top: bM, bottom: bM, left: bM, right: bM };
+
+  ws.columns = [{ width: 6 }, { width: 30 }, { width: 14 }, { width: 12 }, { width: 16 }];
+  ws.getRow(1).height = 6;
+
+  ws.getRow(2).height = 32;
+  ws.mergeCells('A2:E2');
+  const t = ws.getCell('A2');
+  t.value = tipo === 'hipermaxi' ? 'HISTORIAL HIPERMAXI' : 'HISTORIAL MERCADO';
+  t.font = { bold: true, size: 16, name: 'Arial', color: BLANCO };
+  t.fill = sf(AZUL_OSC); t.alignment = { horizontal: 'center', vertical: 'middle' }; t.border = allM;
+
+  ws.getRow(3).height = 10;
+
+  ws.getRow(4).height = 26;
+  ws.mergeCells('A4:C4'); ws.mergeCells('D4:E4');
+  const sCell = ws.getCell('A4');
+  sCell.value = 'SUCURSAL:  ' + sucStr; sCell.font = { bold: true, size: 11, name: 'Arial', color: AZUL_MED };
+  sCell.fill = sf(AZUL_CLAR); sCell.alignment = { horizontal: 'left', vertical: 'middle' }; sCell.border = allM;
+  const fCell = ws.getCell('D4');
+  fCell.value = fechaStr; fCell.font = { size: 11, name: 'Arial', color: AZUL_OSC };
+  fCell.fill = sf(GRIS_MED); fCell.alignment = { horizontal: 'center', vertical: 'middle' }; fCell.border = allM;
+
+  ws.getRow(5).height = 8;
+
+  ws.getRow(6).height = 20;
+  const HDRS = ['', 'PRODUCTO', 'UNIDAD', 'CANTIDAD', 'MONTO (Bs)'];
+  HDRS.forEach((h, i) => {
+    const c = ws.getRow(6).getCell(i + 1);
+    c.value = h; c.font = { bold: true, size: 10, name: 'Arial', color: BLANCO };
+    c.fill = sf(AZUL_MED); c.alignment = { horizontal: 'center', vertical: 'middle' }; c.border = allT;
+  });
+
+  let r = 7;
+  items.forEach(it => {
+    ws.getRow(r).height = 17;
+    const bg = (r % 2 === 0) ? AZUL_CLAR : BLANCO;
+    ws.getCell(`B${r}`).value = it.nombre;
+    ws.getCell(`C${r}`).value = it.unidad;
+    ws.getCell(`D${r}`).value = it.cantidad;
+    ws.getCell(`E${r}`).value = it.monto || 0;
+    ['A','B','C','D','E'].forEach(col => {
+      const c = ws.getCell(`${col}${r}`);
+      c.font = { size: 9, name: 'Arial', color: NEGRO };
+      c.fill = sf(bg); c.border = allT;
+      c.alignment = { horizontal: col === 'B' ? 'left' : 'center', vertical: 'middle' };
+    });
+    r++;
+  });
+
+  r += 1;
+  ws.mergeCells(`B${r}:D${r}`);
+  ws.getCell(`B${r}`).value = 'TOTAL'; ws.getCell(`B${r}`).font = { bold: true, size: 11, name: 'Arial' };
+  ws.getCell(`B${r}`).alignment = { horizontal: 'right', vertical: 'middle' };
+  ws.getCell(`E${r}`).value = totalGeneral; ws.getCell(`E${r}`).font = { bold: true, size: 11, name: 'Arial' };
+  ws.getCell(`E${r}`).border = allM;
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = nombreArchivo + '.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── EXCEL PEDIDO INDIVIDUAL (ENTREGAS) ──
+window.descargarExcel = async function(pedidoId) {
+  const p = pedidos.find(x => x.id===pedidoId);
+  if (!p) return;
+  const sucursal = (p.sucursal||'').toUpperCase();
+  const fecha    = formatFecha(p.timestamp);
+  const itemsConNombres = [...p.items];
+  itemsConNombres._entregadoPor = p.entregadoPor || '';
+  itemsConNombres._recibidoPor  = p.recibidoPor  || '';
+  const notaHeader = p.area === 'Cocina' ? 'NOTA COCINA' : 'NOTA BARRA';
+  await generarExcel(itemsConNombres, sucursal, fecha, `pedido_${p.sucursal||'barra'}_${new Date().toLocaleDateString('es-BO').replace(/\//g,'-')}`, notaHeader);
+  mostrarToast('✦ Excel descargado');
+};
+
+// ── TOAST ──
+function mostrarToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── HABILITAR PEDIDOS FUERA DE HORARIO (por sucursal, se vence solo al otro día) ──
+// Misma colección que ya usaba la versión anterior (configPedidos), para que
+// la configuración de horarios no quede partida en dos sistemas. Incluye
+// Galpón porque Mercado también lo necesita.
+const SUCURSALES_HORARIO = ['Beni', 'Alemana', 'Zoológico', 'Galpón'];
+const configHorarios = {};
+
+function claveHoyStrAdmin() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function actualizarUiHorario(suc) {
+  const cfg = configHorarios[suc] || {};
+  const activoHoy = cfg.overrideActivo === true && cfg.overrideFecha === claveHoyStrAdmin();
+  const btn = document.getElementById('htSwitch-' + suc);
+  const estado = document.getElementById('htEstado-' + suc);
+  if (!btn || !estado) return;
+  btn.classList.toggle('activo', activoHoy);
+  estado.textContent = activoHoy ? 'Habilitado hoy' : 'Normal';
+  estado.classList.toggle('ht-estado-on', activoHoy);
+}
+
+window.toggleHorarioSucursal = async function(suc) {
+  const cfg = configHorarios[suc] || {};
+  const activoHoy = cfg.overrideActivo === true && cfg.overrideFecha === claveHoyStrAdmin();
+  try {
+    await setDoc(doc(db, 'configPedidos', suc), {
+      overrideActivo: !activoHoy,
+      overrideFecha: claveHoyStrAdmin()
+    });
+    mostrarToast(!activoHoy ? `✦ ${suc}: pedidos habilitados por hoy` : `${suc}: vuelve al horario normal`);
+  } catch (e) {
+    console.error(e);
+    mostrarToast('Error al actualizar');
+  }
+};
+
+SUCURSALES_HORARIO.forEach(suc => {
+  onSnapshot(doc(db, 'configPedidos', suc), snap => {
+    configHorarios[suc] = snap.exists() ? snap.data() : {};
+    actualizarUiHorario(suc);
+  });
+});
+
+// ══════════════════ HIPERMAXI (Pedido combinado de 3 sucursales) ══════════════════
+// A diferencia del Diario, acá cada sucursal manda SU pedido por separado (mismo
+// mecanismo de siempre), pero almacén solo ve UNA tarjeta combinada, y recién
+// cuando las 3 (Beni, Alemana, Zoológico) ya mandaron el suyo.
+const SUCURSALES_HIPER = ['Beni', 'Alemana', 'Zoológico'];
+const ICONOS_HIPER = { Beni: '🌿', Alemana: '🏛️', 'Zoológico': '🦁' };
+// Cada sucursal manda 2 pedidos de Hipermaxi (uno por área) — Galpón no
+// participa de Hipermaxi (exclusivo de Mercado), así que no tiene excepción acá.
+const AREAS_HIPER = ['Cocina', 'Barra/Salón'];
+// Aplana la estructura anidada {sucursal: {area: doc}} a una lista plana de
+// docs, en orden sucursal × área — usado donde antes se iteraba SUCURSALES_HIPER
+// sobre un doc único por sucursal.
+function docsHiperFlat(docs) {
+  const flat = [];
+  SUCURSALES_HIPER.forEach(s => {
+    AREAS_HIPER.forEach(a => {
+      if (docs[s] && docs[s][a]) flat.push(docs[s][a]);
+    });
+  });
+  return flat;
+}
+const tachadosHiper = {};
+const notasHiper = {};
+let filtroHiperActual = 'pedido';
+
+// Los pedidos de Hipermaxi viven en su PROPIA colección de Firestore
+// (pedidosHipermaxi), separada de "pedidos" (Diario) y "pedidosMercado" —
+// así quedan aislados por diseño, nunca se pueden mezclar entre sí.
+let pedidosHiper = [];
+onSnapshot(collection(db, 'pedidosHipermaxi'), snap => {
+  pedidosHiper = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVistaHiper();
+});
+
+// Precios (P.U.) cargados para cada grupo de Hipermaxi ya confirmado — se
+// pueden completar en cualquier momento desde Despachos o Entregas, no
+// bloquean nada. Colección aparte: precios_hiper/{grupoHiperId}
+let preciosHiperCache = {};
+onSnapshot(collection(db, 'precios_hiper'), snap => {
+  preciosHiperCache = {};
+  snap.docs.forEach(d => { preciosHiperCache[d.id] = d.data(); });
+  renderVistaHiper();
+});
+
+// Resume cuánto se lleva cargado de precio para un grupo (para el badge de la tarjeta)
+function resumenPrecioHiper(gid, items) {
+  const guardado = preciosHiperCache[gid];
+  if (!guardado || !guardado.precios) return { cargado: false, total: 0, completos: 0, totalItems: items.length };
+  const precios = guardado.precios;
+  let total = 0, completos = 0;
+  items.forEach(it => {
+    if (precios[it.nombre] != null) { total += precios[it.nombre] * it.total; completos++; }
+  });
+  return { cargado: completos > 0, total, completos, totalItems: items.length };
+}
+
+window.setFiltroHiper = function(f) {
+  filtroHiperActual = f;
+  document.querySelectorAll('#pantallaHiper .filtro-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('hfiltro-' + f).classList.add('activo');
+  renderVistaHiper();
+};
+
+function tsToDate(ts) {
+  if (!ts) return new Date(0);
+  return ts.toDate ? ts.toDate() : new Date(ts);
+}
+
+// Toma, por sucursal Y por área, el pedido hipermaxi más reciente en un
+// estado dado que TODAVÍA no forma parte de un grupo confirmado (grupoHiper).
+// porSucursal queda como {sucursal: {Cocina: doc, 'Barra/Salón': doc}}.
+function agruparHipermaxiPorSucursal(estado) {
+  const porSucursal = {};
+  pedidosHiper.filter(p => p.estado === estado && !p.grupoHiper).forEach(p => {
+    if (!porSucursal[p.sucursal]) porSucursal[p.sucursal] = {};
+    const actual = porSucursal[p.sucursal][p.area];
+    if (!actual || tsToDate(p.timestamp) > tsToDate(actual.timestamp)) porSucursal[p.sucursal][p.area] = p;
+  });
+  const faltantes = [];
+  SUCURSALES_HIPER.forEach(s => {
+    AREAS_HIPER.forEach(a => {
+      if (!porSucursal[s] || !porSucursal[s][a]) faltantes.push(`${s} (${a})`);
+    });
+  });
+  const completo = faltantes.length === 0;
+  const groupId = completo
+    ? SUCURSALES_HIPER.flatMap(s => AREAS_HIPER.map(a => porSucursal[s][a].id)).join('__')
+    : null;
+  return { completo, faltantes, docs: porSucursal, groupId };
+}
+
+// Una vez que almacén confirma la entrega, las 3 sucursales (× 2 áreas cada
+// una) quedan "marcadas" con un grupoHiper compartido — así se las sigue
+// viendo juntas en Despachos/Entregas aunque cada una confirme su recepción
+// en momentos distintos. grupos[grupoHiper][sucursal][area] = doc.
+function gruposHiperPersistidos() {
+  const grupos = {};
+  pedidosHiper.filter(p => p.grupoHiper).forEach(p => {
+    if (!grupos[p.grupoHiper]) grupos[p.grupoHiper] = {};
+    if (!grupos[p.grupoHiper][p.sucursal]) grupos[p.grupoHiper][p.sucursal] = {};
+    grupos[p.grupoHiper][p.sucursal][p.area] = p;
+  });
+  return grupos;
+}
+
+// Combina los items de las 3 sucursales (sumando ambas áreas por sucursal)
+// en una sola lista por producto, mostrando cuánto pidió cada una y el total.
+function fusionarItemsHipermaxi(docs) {
+  const mapa = {};
+  SUCURSALES_HIPER.forEach(suc => {
+    AREAS_HIPER.forEach(area => {
+      const p = docs[suc] && docs[suc][area];
+      if (!p) return;
+      (p.items || []).forEach(it => {
+        if (!mapa[it.nombre]) mapa[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', porSucursal: { Beni: 0, Alemana: 0, 'Zoológico': 0 }, observaciones: [] };
+        mapa[it.nombre].porSucursal[suc] += (it.cantidad || 0);
+        if (it.observaciones) mapa[it.nombre].observaciones.push(`${suc} (${area}): ${it.observaciones}`);
+      });
+    });
+  });
+  return Object.values(mapa)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+    .map(it => ({ ...it, total: it.porSucursal.Beni + it.porSucursal.Alemana + it.porSucursal['Zoológico'] }));
+}
+
+function renderVistaHiper() {
+  if (filtroHiperActual === 'pedido')         renderPedidoHiper();
+  else if (filtroHiperActual === 'despachos') renderDespachosHiper();
+  else                                        renderEntregasHiper();
+  actualizarContadoresHiper();
+}
+
+// ── PEDIDO (esperando/mostrando el pedido combinado) ──
+function renderPedidoHiper() {
+  const lista = document.getElementById('hiperLista');
+  const grupo = agruparHipermaxiPorSucursal('pendiente');
+  if (!grupo.completo) {
+    document.getElementById('subtituloHiper').textContent = `Faltan: ${grupo.faltantes.join(', ')}`;
+    lista.innerHTML = `<div class="sin-pedidos">
+      <span class="orn-v">⏳</span>
+      <p>Esperando que las 3 sucursales manden sus 2 pedidos (Cocina y Barra/Salón) de Hipermaxi.</p>
+      <p style="margin-top:12px;font-size:13px;letter-spacing:1px">
+        ${SUCURSALES_HIPER.map(s => AREAS_HIPER.map(a =>
+          `${(grupo.docs[s] && grupo.docs[s][a]) ? '✅' : '⬜'} ${ICONOS_HIPER[s]} ${s} (${a})`
+        ).join('&nbsp;&nbsp;')).join('&nbsp;&nbsp;&nbsp;&nbsp;')}
+      </p>
+    </div>`;
+    return;
+  }
+  document.getElementById('subtituloHiper').textContent = 'Las 3 sucursales completaron su pedido (Cocina + Barra/Salón)';
+  lista.innerHTML = buildCardHiperPendiente(grupo);
+}
+
+function buildCardHiperPendiente(grupo) {
+  const gid = grupo.groupId;
+  if (!tachadosHiper[gid]) tachadosHiper[gid] = new Set();
+  if (!notasHiper[gid]) notasHiper[gid] = {};
+  const items   = fusionarItemsHipermaxi(grupo.docs);
+  const total   = items.length;
+  const hechos  = tachadosHiper[gid].size;
+  const todos   = total > 0 && hechos === total;
+  const pct     = total > 0 ? Math.round((hechos / total) * 100) : 0;
+  const horaMasReciente = Math.max(...docsHiperFlat(grupo.docs).map(d => tsToDate(d.timestamp).getTime()));
+
+  return `
+  <div class="pedido-card" id="hcard-${gid}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${new Date(horaMasReciente).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}</span>
+        <span class="badge pendiente">Pendiente</span>
+      </div>
+      <span class="pedido-sucursal">🛒 Hipermaxi — Beni + Alemana + Zoológico</span>
+    </div>
+    <button class="btn-excel" style="margin-bottom:10px" onclick="descargarExcelHiper('${gid}')">⬇ Descargar Excel</button>
+    <div class="prog-wrap">
+      <div class="prog-txt"><span>Preparación</span><span>${hechos}/${total}</span></div>
+      <div class="prog-bg"><div class="prog-bar" style="width:${pct}%"></div></div>
+    </div>
+    <div class="pedido-items">
+      ${items.map((it, idx) => {
+        const nota = notasHiper[gid][idx] || '';
+        const tien = nota.length > 0;
+        return `
+        <div>
+          <div class="item-row ${tachadosHiper[gid].has(idx) ? 'tachado' : ''}" onclick="toggleItemHiper('${gid}',${idx})">
+            <div class="item-check">${tachadosHiper[gid].has(idx) ? '✓' : ''}</div>
+            <span class="item-nombre">${it.nombre}</span>
+            <span class="item-qty">×${it.total} ${it.unidad}</span>
+            <button class="item-nota-btn ${tien ? 'tiene-nota' : ''}" id="hnBtn-${gid}-${idx}"
+              onclick="event.stopPropagation();toggleNotaHiper('${gid}',${idx})">${tien ? '✎ Nota' : '+ Nota'}</button>
+          </div>
+          <div class="hiper-desglose">
+            <span>${ICONOS_HIPER.Beni} Beni: ${it.porSucursal.Beni}</span>
+            <span>${ICONOS_HIPER.Alemana} Alemana: ${it.porSucursal.Alemana}</span>
+            <span>${ICONOS_HIPER['Zoológico']} Zoológico: ${it.porSucursal['Zoológico']}</span>
+          </div>
+          ${it.observaciones.length ? `<div style="padding:0 12px 8px;font-size:12px;color:var(--oro);font-style:italic">📌 ${it.observaciones.join(' · ')}</div>` : ''}
+          <div class="item-nota-wrap ${tien ? 'visible' : ''}" id="hnWrap-${gid}-${idx}">
+            <textarea class="item-nota-input" rows="1" id="hnInp-${gid}-${idx}"
+              placeholder="Nota para este producto (ej: no llegó)..."
+              oninput="guardarNotaHiper('${gid}',${idx},this.value)">${nota}</textarea>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="acciones">
+      ${todos ? `<div class="nombre-wrap">
+        <span class="nombre-label">Tu nombre — Entregué conforme</span>
+        <input type="text" class="nombre-input" id="hnomEnt-${gid}" placeholder="Escribí tu nombre..."/>
+      </div>` : ''}
+      <button class="btn-confirmar" onclick="confirmarEntregaHiper('${gid}')" ${!todos ? 'disabled' : ''}>
+        <span>${todos ? 'Confirmar entrega' : `Tachá todos los ítems (${hechos}/${total})`}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+window.toggleItemHiper = function(gid, idx) {
+  if (!tachadosHiper[gid]) tachadosHiper[gid] = new Set();
+  tachadosHiper[gid].has(idx) ? tachadosHiper[gid].delete(idx) : tachadosHiper[gid].add(idx);
+  renderPedidoHiper();
+};
+
+window.toggleNotaHiper = function(gid, idx) {
+  const w = document.getElementById(`hnWrap-${gid}-${idx}`);
+  const i = document.getElementById(`hnInp-${gid}-${idx}`);
+  if (!w) return;
+  const v = w.classList.toggle('visible');
+  if (v && i) i.focus();
+};
+
+window.guardarNotaHiper = function(gid, idx, val) {
+  if (!notasHiper[gid]) notasHiper[gid] = {};
+  notasHiper[gid][idx] = val;
+  const btn = document.getElementById(`hnBtn-${gid}-${idx}`);
+  if (btn) { btn.textContent = val.trim() ? '✎ Nota' : '+ Nota'; btn.classList.toggle('tiene-nota', val.trim().length > 0); }
+};
+
+window.confirmarEntregaHiper = async function(gid) {
+  const input  = document.getElementById('hnomEnt-' + gid);
+  const nombre = input ? input.value.trim() : '';
+  if (!nombre) { mostrarToast('Escribí tu nombre para confirmar'); return; }
+  const btn = document.querySelector(`#hcard-${gid} .btn-confirmar`);
+  if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Confirmando...'; }
+  try {
+    // Capturamos los items ANTES de escribir en Firestore, porque una vez que
+    // el pedido pasa a "entregado" ya no se puede reconstruir desde 'pendiente'.
+    const grupoPend  = agruparHipermaxiPorSucursal('pendiente');
+    const itemsRef   = grupoPend.groupId === gid ? fusionarItemsHipermaxi(grupoPend.docs) : [];
+    const notasGuardadas = notasHiper[gid] || {};
+    const notasPorNombre = {};
+    Object.entries(notasGuardadas).forEach(([idx, texto]) => {
+      const it = itemsRef[Number(idx)];
+      if (it && texto && texto.trim()) notasPorNombre[it.nombre] = texto.trim();
+    });
+
+    const ids = gid.split('__');
+    const grupoHiperId = 'hg_' + Date.now();
+    await Promise.all(ids.map(id => updateDoc(doc(db, 'pedidosHipermaxi', id), {
+      estado: 'entregado', entregadoPor: nombre, fechaEntrega: serverTimestamp(), grupoHiper: grupoHiperId
+    })));
+    // Las notas quedan guardadas para siempre junto a los precios de este
+    // grupo (mismo documento, misma colección) — el excel las va a leer de ahí.
+    if (Object.keys(notasPorNombre).length) {
+      await setDoc(doc(db, 'precios_hiper', grupoHiperId), { notas: notasPorNombre }, { merge: true });
+    }
+    delete tachadosHiper[gid];
+    delete notasHiper[gid];
+    mostrarToast('✦ Entrega confirmada — ' + nombre);
+    setTimeout(() => setFiltroHiper('despachos'), 800);
+  } catch (e) {
+    console.error(e); mostrarToast('Error al confirmar entrega');
+    if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Confirmar entrega'; }
+  }
+};
+
+// ── DESPACHOS (esperando que cada sucursal confirme su recepción) ──
+function renderDespachosHiper() {
+  const lista = document.getElementById('hiperLista');
+  const grupos  = gruposHiperPersistidos();
+  const activos = Object.entries(grupos).filter(([gid, docs]) =>
+    docsHiperFlat(docs).some(d => d.estado === 'entregado')
+  );
+  if (!activos.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">✦</span><p>Sin despachos pendientes de confirmación</p></div>`; return; }
+  lista.innerHTML = activos.map(([gid, docs]) => {
+    const flat = docsHiperFlat(docs);
+    const completo = SUCURSALES_HIPER.every(s => AREAS_HIPER.every(a => docs[s] && docs[s][a]));
+    const todosEntregados = completo && flat.every(d => d.estado === 'entregado');
+    const entregadoPor = flat.map(d => d.entregadoPor).find(Boolean) || '';
+    const items = fusionarItemsHipermaxi(docs);
+    const rp = resumenPrecioHiper(gid, items);
+    return `
+    <div class="pedido-card" id="hcard-desp-${gid}">
+      <div class="pedido-header">
+        <div class="pedido-header-top">
+          <span class="pedido-hora">🕐 Entregó: ${entregadoPor}</span>
+          <span class="badge entregado">En espera de confirmación</span>
+        </div>
+        <span class="pedido-sucursal">🛒 Hipermaxi</span>
+      </div>
+      <button class="btn-excel" style="margin-bottom:8px" onclick="descargarExcelHiper('${gid}')">⬇ Descargar Excel</button>
+      <button class="btn-precios" onclick="abrirPreciosHiper('${gid}')">
+        💰 ${rp.cargado ? `Bs ${rp.total.toFixed(2)} — ${rp.completos}/${rp.totalItems} con precio` : 'Cargar precios'}
+      </button>
+      <div class="nombres-box">
+        ${SUCURSALES_HIPER.map(s => AREAS_HIPER.map(a => {
+          const d = docs[s] && docs[s][a];
+          return `
+          <div class="nombre-row">
+            <span class="nombre-lbl">${ICONOS_HIPER[s]} ${s} (${a}):</span>
+            <span class="nombre-val">${d && d.estado === 'completado' ? '✓ Recibido — ' + (d.recibidoPor || '') : '⏳ Esperando confirmación'}</span>
+          </div>`;
+        }).join('')).join('')}
+      </div>
+      ${todosEntregados ? `<div class="acciones"><button class="btn-deshacer" onclick="deshacerEntregaHiper('${gid}')">↩ Deshacer entrega</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+window.deshacerEntregaHiper = async function(gid) {
+  const docs = gruposHiperPersistidos()[gid];
+  if (!docs) return;
+  const ids = docsHiperFlat(docs).map(d => d.id).filter(Boolean);
+  await Promise.all(ids.map(id => updateDoc(doc(db, 'pedidosHipermaxi', id), {
+    estado: 'pendiente', entregadoPor: '', fechaEntrega: null, grupoHiper: null
+  })));
+  mostrarToast('Entrega deshecha');
+};
+
+// ── ENTREGAS (las 3 sucursales ya confirmaron recepción) ──
+function renderEntregasHiper() {
+  const lista = document.getElementById('hiperLista');
+  const grupos = gruposHiperPersistidos();
+  const completos = Object.entries(grupos).filter(([gid, docs]) => {
+    const flat = docsHiperFlat(docs);
+    return flat.length === SUCURSALES_HIPER.length * AREAS_HIPER.length && flat.every(d => d.estado === 'completado');
+  });
+  if (!completos.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">📭</span><p>Sin entregas completadas</p></div>`; return; }
+  lista.innerHTML = completos.map(([gid, docs]) => {
+    const items = fusionarItemsHipermaxi(docs);
+    const rp = resumenPrecioHiper(gid, items);
+    const flat = docsHiperFlat(docs);
+    const docMasReciente = flat.reduce((max, d) => tsToDate(d.timestamp) > tsToDate(max.timestamp) ? d : max, flat[0]);
+    return `
+    <div class="entrega-simple entrega-hiper" id="hcard-ent-${gid}">
+      <div class="es-info">
+        <span class="es-suc">🛒 Hipermaxi — Beni + Alemana + Zoológico</span>
+        <span class="es-fecha">🕐 ${formatFecha(docMasReciente ? docMasReciente.timestamp : null)}</span>
+        <span class="es-precio">${rp.cargado ? `💰 Bs ${rp.total.toFixed(2)} — ${rp.completos}/${rp.totalItems} con precio` : '💰 Sin precios cargados'}</span>
+      </div>
+      <div class="es-btns">
+        <button class="btn-precios" onclick="abrirPreciosHiper('${gid}')">💰</button>
+        <button class="es-dl" onclick="descargarExcelHiper('${gid}')">↓ Excel</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarContadoresHiper() {
+  const grupo  = agruparHipermaxiPorSucursal('pendiente');
+  const grupos = gruposHiperPersistidos();
+  const enDespacho = Object.entries(grupos).filter(([gid, docs]) => docsHiperFlat(docs).some(d => d.estado === 'entregado')).length;
+  document.getElementById('hcountPedido').textContent = grupo.completo ? 1 : 0;
+  const cD = document.getElementById('hcountDespachos');
+  if (enDespacho > 0) { cD.textContent = enDespacho; cD.style.display = 'inline-block'; }
+  else { cD.style.display = 'none'; }
+}
+
+// ── CARGAR PRECIOS (P.U.) — disponible desde Despachos o Entregas, sin bloquear nada ──
+function buildPreciosOverlay(gid) {
+  const docs  = resolverDocsHiper(gid);
+  const items = fusionarItemsHipermaxi(docs);
+  const cache = preciosHiperCache[gid] || {};
+  const guardados = cache.precios || {};
+  const montoGuardado = cache.montoEntregado != null ? cache.montoEntregado : '';
+  const totalInicial = items.reduce((acc, it) => acc + ((Number(guardados[it.nombre]) || 0) * it.total), 0);
+  const cambioInicial = montoGuardado !== '' ? (Number(montoGuardado) - totalInicial) : null;
+
+  return `
+    <div class="pf-topbar">
+      <button class="pf-close" onclick="cerrarPreciosHiper()">← Volver</button>
+      <span class="pf-badge">💰 Precios</span>
+    </div>
+    <div class="pf-body">
+      <div class="pf-info">
+        <span class="pf-hora">🛒 Hipermaxi — Beni + Alemana + Zoológico</span>
+      </div>
+      <p style="color:var(--mut);font-size:14px;margin-bottom:16px">
+        Cargá cuánto costó cada producto. El total se calcula solo, y se guarda apenas toqués "Guardar".
+      </p>
+      <div class="monto-entregado-row">
+        <span class="precio-nombre">Monto entregado para la compra <span style="color:var(--mut);font-weight:400;font-size:12px">(opcional)</span></span>
+        <div class="precio-input-wrap">
+          <span class="precio-simb">Bs</span>
+          <input type="number" step="0.01" min="0" class="precio-input monto-entregado-input" id="pMontoEntregado"
+                 value="${montoGuardado}" placeholder="0.00" oninput="recalcularPrecioTotal()">
+        </div>
+      </div>
+      <div class="precios-lista">
+        ${items.map((it, idx) => {
+          const pu = guardados[it.nombre] || '';
+          const sub = (Number(pu) || 0) * it.total;
+          return `
+          <div class="precio-row">
+            <div class="precio-info">
+              <span class="precio-nombre">${it.nombre}</span>
+              <span class="precio-cant">×${it.total} ${it.unidad}</span>
+            </div>
+            <div class="precio-input-wrap">
+              <span class="precio-simb">Bs</span>
+              <input type="number" step="0.01" min="0" class="precio-input" id="pinput-${idx}"
+                     data-nombre="${it.nombre.replace(/"/g, '&quot;')}" data-cant="${it.total}"
+                     value="${pu}" placeholder="0.00" oninput="recalcularPrecioTotal()">
+            </div>
+            <span class="precio-subtotal" id="psub-${idx}">Bs ${sub.toFixed(2)}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="precio-total-box">
+        <span>TOTAL</span>
+        <span id="precioTotalGeneral">Bs ${totalInicial.toFixed(2)}</span>
+      </div>
+      <div class="precio-cambio-box" id="precioCambioBox" style="display:${cambioInicial != null ? 'flex' : 'none'}">
+        <span>CAMBIO</span>
+        <span id="precioCambioGeneral">Bs ${(cambioInicial || 0).toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="pf-footer">
+      <button class="pf-btn-confirmar" onclick="guardarPreciosHiper('${gid}')">Guardar precios</button>
+    </div>`;
+}
+
+window.abrirPreciosHiper = function(gid) {
+  const overlay = document.createElement('div');
+  overlay.className = 'pedido-full-overlay';
+  overlay.id = 'preciosHiperOverlay';
+  overlay.dataset.gid = gid;
+  overlay.innerHTML = buildPreciosOverlay(gid);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+};
+
+window.cerrarPreciosHiper = function() {
+  const o = document.getElementById('preciosHiperOverlay');
+  if (o) o.remove();
+  document.body.style.overflow = '';
+};
+
+window.recalcularPrecioTotal = function() {
+  let total = 0;
+  document.querySelectorAll('#preciosHiperOverlay .precios-lista .precio-input').forEach((inp, idx) => {
+    const cant = Number(inp.dataset.cant) || 0;
+    const pu   = Number(inp.value) || 0;
+    const sub  = cant * pu;
+    total += sub;
+    const subEl = document.getElementById('psub-' + idx);
+    if (subEl) subEl.textContent = 'Bs ' + sub.toFixed(2);
+  });
+  const totEl = document.getElementById('precioTotalGeneral');
+  if (totEl) totEl.textContent = 'Bs ' + total.toFixed(2);
+
+  const montoInp = document.getElementById('pMontoEntregado');
+  const cambioBox = document.getElementById('precioCambioBox');
+  const cambioEl = document.getElementById('precioCambioGeneral');
+  const montoVal = montoInp ? montoInp.value : '';
+  if (montoVal !== '' && cambioBox && cambioEl) {
+    cambioBox.style.display = 'flex';
+    cambioEl.textContent = 'Bs ' + (Number(montoVal) - total).toFixed(2);
+  } else if (cambioBox) {
+    cambioBox.style.display = 'none';
+  }
+};
+
+window.guardarPreciosHiper = async function(gid) {
+  const precios = {};
+  document.querySelectorAll('#preciosHiperOverlay .precios-lista .precio-input').forEach(inp => {
+    const val = Number(inp.value);
+    if (val > 0) precios[inp.dataset.nombre] = val;
+  });
+  const montoInp = document.getElementById('pMontoEntregado');
+  const montoVal = montoInp && montoInp.value !== '' ? Number(montoInp.value) : null;
+  try {
+    await setDoc(doc(db, 'precios_hiper', gid), { precios, montoEntregado: montoVal, actualizado: serverTimestamp() }, { merge: true });
+    mostrarToast('✦ Precios guardados');
+    cerrarPreciosHiper();
+  } catch (e) {
+    console.error(e);
+    mostrarToast('Error al guardar precios');
+  }
+};
+
+// ── EXCEL HIPERMAXI (mismo formato de la planilla LISTA HIPERMAXI) ──
+function resolverDocsHiper(gid) {
+  const grupos = gruposHiperPersistidos();
+  if (grupos[gid]) return grupos[gid];
+  // Todavía sin grupoHiper persistido (viene de la pestaña Pedido, antes de
+  // confirmar) — el gid trae 6 ids (3 sucursales × 2 áreas), en el mismo
+  // orden en que los arma agruparHipermaxiPorSucursal: sucursal × área.
+  const ids = gid.split('__');
+  const docs = {};
+  let i = 0;
+  SUCURSALES_HIPER.forEach(suc => {
+    AREAS_HIPER.forEach(area => {
+      const p = pedidosHiper.find(x => x.id === ids[i]);
+      if (p) { if (!docs[suc]) docs[suc] = {}; docs[suc][area] = p; }
+      i++;
+    });
+  });
+  return docs;
+}
+
+window.descargarExcelHiper = async function(gid) {
+  const docs  = resolverDocsHiper(gid);
+  const items = fusionarItemsHipermaxi(docs);
+  if (!items.length) { mostrarToast('No hay datos para exportar'); return; }
+  const cache = preciosHiperCache[gid] || {};
+  const precios = cache.precios || {};
+  const notas   = cache.notas || {};
+  const montoEntregado = cache.montoEntregado != null ? cache.montoEntregado : null;
+  await generarExcelHiper(items, precios, notas, montoEntregado, docs);
+  mostrarToast('✦ Excel descargado');
+};
+
+async function generarExcelHiper(items, precios, notas, montoEntregado, docs) {
+  precios = precios || {}; notas = notas || {}; docs = docs || {};
+  const wb = new ExcelJS.Workbook();
+  wb.calcProperties.fullCalcOnLoad = true; // fuerza a Excel a recalcular las fórmulas al abrir
+  const ws = wb.addWorksheet('Lista Hipermaxi', { pageSetup: { fitToPage: true, fitToWidth: 1 } });
+
+  const ROJO  = { argb: 'FFCC0000' };
+  const GRIS  = { argb: 'FFE0E0E0' };
+  const sf = c => ({ type: 'pattern', pattern: 'solid', fgColor: c });
+  const bT = { style: 'thin', color: { argb: 'FF000000' } };
+  const allT = { top: bT, bottom: bT, left: bT, right: bT };
+
+  ws.columns = [
+    { width: 3 }, { width: 26 }, { width: 8 },
+    { width: 8 }, { width: 8 },
+    { width: 8 }, { width: 8 },
+    { width: 8 }, { width: 8 },
+    { width: 8 }, { width: 8 }, { width: 10 },
+    { width: 22 }, { width: 22 }
+  ]; // A(-) B(Producto) C(unidad) D(ZOO) E(check) F(BENI) G(check) H(ALEMANA) I(check) J(total) K(P.U.) L(P.Total) M(Observaciones) N(Nota Almacén)
+
+  ws.mergeCells('B3:I3');
+  const t = ws.getCell('B3');
+  t.value = 'LISTA HIPERMAXI'; t.font = { bold: true, size: 16, name: 'Arial' };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  const flatDocsHiper = docsHiperFlat(docs);
+  const fechaMasReciente = Math.max(...flatDocsHiper.map(d => tsToDate(d.timestamp).getTime()));
+  ws.mergeCells('J3:N3');
+  const fc = ws.getCell('J3');
+  fc.value = 'Fecha: ' + (isFinite(fechaMasReciente) ? new Date(fechaMasReciente).toLocaleDateString('es-BO') : '—');
+  fc.font = { bold: true, size: 11, name: 'Arial' };
+  fc.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  ws.mergeCells('D5:E5'); ws.getCell('D5').value = 'Stock'; ws.getCell('D5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('D5').alignment = { horizontal: 'center' };
+  ws.mergeCells('F5:G5'); ws.getCell('F5').value = 'Stock'; ws.getCell('F5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('F5').alignment = { horizontal: 'center' };
+  ws.mergeCells('H5:I5'); ws.getCell('H5').value = 'Stock'; ws.getCell('H5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('H5').alignment = { horizontal: 'center' };
+
+  const hdr6 = ['', 'PRODUCTO', '', 'ZOO', 'check', 'BENI', 'check', 'ALEMANA', 'check', 'total', 'P.U.', 'P. Total', 'Observaciones', 'NOTA ALMACÉN'];
+  hdr6.forEach((h, i) => {
+    if (!h) return;
+    const c = ws.getRow(6).getCell(i + 1);
+    c.value = h; c.font = { bold: true, size: 9, name: 'Arial' };
+    c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    c.border = allT; c.fill = sf(GRIS);
+  });
+
+  let r = 7;
+  let totalGeneral = 0;
+  items.forEach(it => {
+    ws.getCell(`B${r}`).value = it.nombre;
+    ws.getCell(`C${r}`).value = it.unidad;
+    ws.getCell(`D${r}`).value = it.porSucursal['Zoológico'] || 0;
+    ws.getCell(`F${r}`).value = it.porSucursal.Beni || 0;
+    ws.getCell(`H${r}`).value = it.porSucursal.Alemana || 0;
+    ws.getCell(`J${r}`).value = it.total;
+    const pu = precios[it.nombre];
+    if (pu != null) {
+      const pTotal = it.total * pu; // precio por UNIDAD × cantidad pedida = precio final de esa línea
+      ws.getCell(`K${r}`).value = pu;
+      ws.getCell(`L${r}`).value = { formula: `J${r}*K${r}`, result: pTotal };
+      totalGeneral += pTotal;
+    }
+    ws.getCell(`M${r}`).value = it.observaciones.join(' · ');
+    ws.getCell(`N${r}`).value = notas[it.nombre] || '';
+    ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N'].forEach(col => {
+      const c = ws.getCell(`${col}${r}`);
+      c.border = allT; c.font = { size: 9, name: 'Arial' };
+      c.alignment = { horizontal: col === 'B' ? 'left' : 'center', vertical: 'middle' };
+    });
+    r++;
+  });
+
+  const filaDatosFin = r - 1;
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'TOTAL'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`L${r}`).value = { formula: `SUM(L7:L${filaDatosFin})`, result: totalGeneral }; ws.getCell(`L${r}`).font = { bold: true, size: 10 }; ws.getCell(`L${r}`).border = allT;
+
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'MONTO ENTREGA'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  if (montoEntregado != null) ws.getCell(`L${r}`).value = montoEntregado;
+  ws.getCell(`L${r}`).border = allT;
+  const filaMonto = r;
+
+  r += 1;
+  ws.mergeCells(`H${r}:I${r}`);
+  ws.getCell(`H${r}`).value = 'CAMBIO'; ws.getCell(`H${r}`).font = { bold: true, size: 10 }; ws.getCell(`H${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`L${r}`).value = { formula: `L${filaMonto}-L${filaMonto - 1}`, result: montoEntregado != null ? (montoEntregado - totalGeneral) : 0 };
+  ws.getCell(`L${r}`).fill = sf(GRIS); ws.getCell(`L${r}`).border = allT;
+
+  r += 2;
+  SUCURSALES_HIPER.forEach(s => {
+    AREAS_HIPER.forEach(a => {
+      const d = docs[s] && docs[s][a];
+      const c = ws.getCell(`B${r}`);
+      c.value = `Recibió ${s} (${a}): ${(d && d.recibidoPor) || '________________________'}`;
+      c.font = { size: 10, name: 'Arial' };
+      r++;
+    });
+  });
+  r += 1;
+  const entregadoPorHiper = flatDocsHiper.map(d => d.entregadoPor).find(Boolean) || '________________________';
+  const ecH = ws.getCell(`B${r}`);
+  ecH.value = `Entregó Conforme: ${entregadoPorHiper}`;
+  ecH.font = { bold: true, size: 10, name: 'Arial' };
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'lista_hipermaxi_' + new Date().toLocaleDateString('es-BO').replace(/\//g, '-') + '.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════ MERCADO (Pedido combinado de 4 sucursales) ══════════════════
+// Misma mecánica que Hipermaxi, pero Mercado espera a 4 sucursales (incluye
+// Galpón) y vive en su propia colección de Firestore (pedidosMercado).
+const SUCURSALES_MERCADO = ['Beni', 'Alemana', 'Zoológico', 'Galpón'];
+const ICONOS_MERCADO = { Beni: '🌿', Alemana: '🏛️', 'Zoológico': '🦁', 'Galpón': '🏭' };
+// Igual que Hipermaxi, cada sucursal manda 2 pedidos (uno por área) — EXCEPTO
+// Galpón, que no se divide en áreas y manda 1 solo pedido. Para Galpón usamos
+// la clave especial '_unica' en vez de 'Cocina'/'Barra/Salón'. barra_v2.html
+// ya manda area:'' para los pedidos de Galpón, así que mapeamos esa cadena
+// vacía a '_unica' en cuanto entra un doc (ver agruparMercadoPorSucursal /
+// gruposMercadoPersistidos).
+const AREAS_MERCADO = {
+  Beni: ['Cocina', 'Barra/Salón'],
+  Alemana: ['Cocina', 'Barra/Salón'],
+  'Zoológico': ['Cocina', 'Barra/Salón'],
+  'Galpón': ['_unica']
+};
+// Aplana {sucursal: {area: doc}} a una lista plana de docs, en orden
+// sucursal × área (Galpón solo aporta su '_unica').
+function docsMercadoFlat(docs) {
+  const flat = [];
+  SUCURSALES_MERCADO.forEach(s => {
+    AREAS_MERCADO[s].forEach(a => {
+      if (docs[s] && docs[s][a]) flat.push(docs[s][a]);
+    });
+  });
+  return flat;
+}
+const tachadosMercado = {};
+const notasMercado = {};
+let filtroMercadoActual = 'pedido';
+
+let pedidosMercado = [];
+onSnapshot(collection(db, 'pedidosMercado'), snap => {
+  pedidosMercado = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVistaMercado();
+});
+
+let preciosMercadoCache = {};
+onSnapshot(collection(db, 'precios_mercado'), snap => {
+  preciosMercadoCache = {};
+  snap.docs.forEach(d => { preciosMercadoCache[d.id] = d.data(); });
+  renderVistaMercado();
+});
+
+function resumenPrecioMercado(gid, items) {
+  const guardado = preciosMercadoCache[gid];
+  if (!guardado || !guardado.precios) return { cargado: false, total: 0, completos: 0, totalItems: items.length };
+  const precios = guardado.precios;
+  let total = 0, completos = 0;
+  items.forEach(it => {
+    if (precios[it.nombre] != null) { total += precios[it.nombre] * it.total; completos++; }
+  });
+  return { cargado: completos > 0, total, completos, totalItems: items.length };
+}
+
+window.setFiltroMercado = function(f) {
+  filtroMercadoActual = f;
+  document.querySelectorAll('#pantallaMercado .filtro-btn').forEach(b => b.classList.remove('activo'));
+  document.getElementById('mfiltro-' + f).classList.add('activo');
+  renderVistaMercado();
+};
+
+function agruparMercadoPorSucursal(estado) {
+  const porSucursal = {};
+  pedidosMercado.filter(p => p.estado === estado && !p.grupoMercado).forEach(p => {
+    const areaKey = p.sucursal === 'Galpón' ? '_unica' : p.area;
+    if (!porSucursal[p.sucursal]) porSucursal[p.sucursal] = {};
+    const actual = porSucursal[p.sucursal][areaKey];
+    if (!actual || tsToDate(p.timestamp) > tsToDate(actual.timestamp)) porSucursal[p.sucursal][areaKey] = p;
+  });
+  const faltantes = [];
+  SUCURSALES_MERCADO.forEach(s => {
+    AREAS_MERCADO[s].forEach(a => {
+      if (!porSucursal[s] || !porSucursal[s][a]) faltantes.push(s === 'Galpón' ? s : `${s} (${a})`);
+    });
+  });
+  const completo = faltantes.length === 0;
+  const groupId = completo
+    ? SUCURSALES_MERCADO.flatMap(s => AREAS_MERCADO[s].map(a => porSucursal[s][a].id)).join('__')
+    : null;
+  return { completo, faltantes, docs: porSucursal, groupId };
+}
+
+function gruposMercadoPersistidos() {
+  const grupos = {};
+  pedidosMercado.filter(p => p.grupoMercado).forEach(p => {
+    const areaKey = p.sucursal === 'Galpón' ? '_unica' : p.area;
+    if (!grupos[p.grupoMercado]) grupos[p.grupoMercado] = {};
+    if (!grupos[p.grupoMercado][p.sucursal]) grupos[p.grupoMercado][p.sucursal] = {};
+    grupos[p.grupoMercado][p.sucursal][areaKey] = p;
+  });
+  return grupos;
+}
+
+function fusionarItemsMercado(docs) {
+  const mapa = {};
+  SUCURSALES_MERCADO.forEach(suc => {
+    AREAS_MERCADO[suc].forEach(area => {
+      const p = docs[suc] && docs[suc][area];
+      if (!p) return;
+      (p.items || []).forEach(it => {
+        if (!mapa[it.nombre]) mapa[it.nombre] = { nombre: it.nombre, unidad: it.unidad || '', porSucursal: { Beni: 0, Alemana: 0, 'Zoológico': 0, 'Galpón': 0 }, observaciones: [] };
+        mapa[it.nombre].porSucursal[suc] += (it.cantidad || 0);
+        const etiqueta = suc === 'Galpón' ? suc : `${suc} (${area})`;
+        if (it.observaciones) mapa[it.nombre].observaciones.push(`${etiqueta}: ${it.observaciones}`);
+      });
+    });
+  });
+  return Object.values(mapa)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+    .map(it => ({ ...it, total: it.porSucursal.Beni + it.porSucursal.Alemana + it.porSucursal['Zoológico'] + it.porSucursal['Galpón'] }));
+}
+
+function renderVistaMercado() {
+  if (filtroMercadoActual === 'pedido')         renderPedidoMercado();
+  else if (filtroMercadoActual === 'despachos') renderDespachosMercado();
+  else                                          renderEntregasMercado();
+  actualizarContadoresMercado();
+}
+
+// ── PEDIDO ──
+function renderPedidoMercado() {
+  const lista = document.getElementById('mercadoLista');
+  const grupo = agruparMercadoPorSucursal('pendiente');
+  if (!grupo.completo) {
+    document.getElementById('subtituloMercado').textContent = `Faltan: ${grupo.faltantes.join(', ')}`;
+    lista.innerHTML = `<div class="sin-pedidos">
+      <span class="orn-v">⏳</span>
+      <p>Esperando que las 4 sucursales manden su pedido de Mercado (Beni, Alemana y Zoológico con Cocina + Barra/Salón; Galpón con un solo pedido).</p>
+      <p style="margin-top:12px;font-size:13px;letter-spacing:1px">
+        ${SUCURSALES_MERCADO.map(s => AREAS_MERCADO[s].map(a =>
+          `${(grupo.docs[s] && grupo.docs[s][a]) ? '✅' : '⬜'} ${ICONOS_MERCADO[s]} ${s}${a === '_unica' ? '' : ` (${a})`}`
+        ).join('&nbsp;&nbsp;')).join('&nbsp;&nbsp;&nbsp;&nbsp;')}
+      </p>
+    </div>`;
+    return;
+  }
+  document.getElementById('subtituloMercado').textContent = 'Las 4 sucursales completaron su pedido';
+  lista.innerHTML = buildCardMercadoPendiente(grupo);
+}
+
+function buildCardMercadoPendiente(grupo) {
+  const gid = grupo.groupId;
+  if (!tachadosMercado[gid]) tachadosMercado[gid] = new Set();
+  if (!notasMercado[gid]) notasMercado[gid] = {};
+  const items   = fusionarItemsMercado(grupo.docs);
+  const total   = items.length;
+  const hechos  = tachadosMercado[gid].size;
+  const todos   = total > 0 && hechos === total;
+  const pct     = total > 0 ? Math.round((hechos / total) * 100) : 0;
+  const horaMasReciente = Math.max(...docsMercadoFlat(grupo.docs).map(d => tsToDate(d.timestamp).getTime()));
+
+  return `
+  <div class="pedido-card" id="mcard-${gid}">
+    <div class="pedido-header">
+      <div class="pedido-header-top">
+        <span class="pedido-hora">🕐 ${new Date(horaMasReciente).toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}</span>
+        <span class="badge pendiente">Pendiente</span>
+      </div>
+      <span class="pedido-sucursal">🏪 Mercado — Beni + Alemana + Zoológico + Galpón</span>
+    </div>
+    <button class="btn-excel" style="margin-bottom:10px" onclick="descargarExcelMercado('${gid}')">⬇ Descargar Excel</button>
+    <div class="prog-wrap">
+      <div class="prog-txt"><span>Preparación</span><span>${hechos}/${total}</span></div>
+      <div class="prog-bg"><div class="prog-bar" style="width:${pct}%"></div></div>
+    </div>
+    <div class="pedido-items">
+      ${items.map((it, idx) => {
+        const nota = notasMercado[gid][idx] || '';
+        const tien = nota.length > 0;
+        return `
+        <div>
+          <div class="item-row ${tachadosMercado[gid].has(idx) ? 'tachado' : ''}" onclick="toggleItemMercado('${gid}',${idx})">
+            <div class="item-check">${tachadosMercado[gid].has(idx) ? '✓' : ''}</div>
+            <span class="item-nombre">${it.nombre}</span>
+            <span class="item-qty">×${it.total} ${it.unidad}</span>
+            <button class="item-nota-btn ${tien ? 'tiene-nota' : ''}" id="mnBtn-${gid}-${idx}"
+              onclick="event.stopPropagation();toggleNotaMercado('${gid}',${idx})">${tien ? '✎ Nota' : '+ Nota'}</button>
+          </div>
+          <div class="hiper-desglose">
+            <span>${ICONOS_MERCADO.Beni} Beni: ${it.porSucursal.Beni}</span>
+            <span>${ICONOS_MERCADO.Alemana} Alemana: ${it.porSucursal.Alemana}</span>
+            <span>${ICONOS_MERCADO['Zoológico']} Zoológico: ${it.porSucursal['Zoológico']}</span>
+            <span>${ICONOS_MERCADO['Galpón']} Galpón: ${it.porSucursal['Galpón']}</span>
+          </div>
+          ${it.observaciones.length ? `<div style="padding:0 12px 8px;font-size:12px;color:var(--oro);font-style:italic">📌 ${it.observaciones.join(' · ')}</div>` : ''}
+          <div class="item-nota-wrap ${tien ? 'visible' : ''}" id="mnWrap-${gid}-${idx}">
+            <textarea class="item-nota-input" rows="1" id="mnInp-${gid}-${idx}"
+              placeholder="Nota para este producto (ej: no llegó)..."
+              oninput="guardarNotaMercado('${gid}',${idx},this.value)">${nota}</textarea>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="acciones">
+      ${todos ? `<div class="nombre-wrap">
+        <span class="nombre-label">Tu nombre — Entregué conforme</span>
+        <input type="text" class="nombre-input" id="mnomEnt-${gid}" placeholder="Escribí tu nombre..."/>
+      </div>` : ''}
+      <button class="btn-confirmar" onclick="confirmarEntregaMercado('${gid}')" ${!todos ? 'disabled' : ''}>
+        <span>${todos ? 'Confirmar entrega' : `Tachá todos los ítems (${hechos}/${total})`}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+window.toggleItemMercado = function(gid, idx) {
+  if (!tachadosMercado[gid]) tachadosMercado[gid] = new Set();
+  tachadosMercado[gid].has(idx) ? tachadosMercado[gid].delete(idx) : tachadosMercado[gid].add(idx);
+  renderPedidoMercado();
+};
+
+window.toggleNotaMercado = function(gid, idx) {
+  const w = document.getElementById(`mnWrap-${gid}-${idx}`);
+  const i = document.getElementById(`mnInp-${gid}-${idx}`);
+  if (!w) return;
+  const v = w.classList.toggle('visible');
+  if (v && i) i.focus();
+};
+
+window.guardarNotaMercado = function(gid, idx, val) {
+  if (!notasMercado[gid]) notasMercado[gid] = {};
+  notasMercado[gid][idx] = val;
+  const btn = document.getElementById(`mnBtn-${gid}-${idx}`);
+  if (btn) { btn.textContent = val.trim() ? '✎ Nota' : '+ Nota'; btn.classList.toggle('tiene-nota', val.trim().length > 0); }
+};
+
+window.confirmarEntregaMercado = async function(gid) {
+  const input  = document.getElementById('mnomEnt-' + gid);
+  const nombre = input ? input.value.trim() : '';
+  if (!nombre) { mostrarToast('Escribí tu nombre para confirmar'); return; }
+  const btn = document.querySelector(`#mcard-${gid} .btn-confirmar`);
+  if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Confirmando...'; }
+  try {
+    // Capturamos los items ANTES de escribir en Firestore, porque una vez que
+    // el pedido pasa a "entregado" ya no se puede reconstruir desde 'pendiente'.
+    const grupoPend  = agruparMercadoPorSucursal('pendiente');
+    const itemsRef   = grupoPend.groupId === gid ? fusionarItemsMercado(grupoPend.docs) : [];
+    const notasGuardadas = notasMercado[gid] || {};
+    const notasPorNombre = {};
+    Object.entries(notasGuardadas).forEach(([idx, texto]) => {
+      const it = itemsRef[Number(idx)];
+      if (it && texto && texto.trim()) notasPorNombre[it.nombre] = texto.trim();
+    });
+
+    const ids = gid.split('__');
+    const grupoMercadoId = 'mg_' + Date.now();
+    await Promise.all(ids.map(id => updateDoc(doc(db, 'pedidosMercado', id), {
+      estado: 'entregado', entregadoPor: nombre, fechaEntrega: serverTimestamp(), grupoMercado: grupoMercadoId
+    })));
+    // Las notas quedan guardadas para siempre junto a los precios de este
+    // grupo (mismo documento, misma colección) — el excel las va a leer de ahí.
+    if (Object.keys(notasPorNombre).length) {
+      await setDoc(doc(db, 'precios_mercado', grupoMercadoId), { notas: notasPorNombre }, { merge: true });
+    }
+    delete tachadosMercado[gid];
+    delete notasMercado[gid];
+    mostrarToast('✦ Entrega confirmada — ' + nombre);
+    setTimeout(() => setFiltroMercado('despachos'), 800);
+  } catch (e) {
+    console.error(e); mostrarToast('Error al confirmar entrega');
+    if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Confirmar entrega'; }
+  }
+};
+
+// ── DESPACHOS ──
+function renderDespachosMercado() {
+  const lista = document.getElementById('mercadoLista');
+  const grupos  = gruposMercadoPersistidos();
+  const activos = Object.entries(grupos).filter(([gid, docs]) =>
+    docsMercadoFlat(docs).some(d => d.estado === 'entregado')
+  );
+  if (!activos.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">✦</span><p>Sin despachos pendientes de confirmación</p></div>`; return; }
+  lista.innerHTML = activos.map(([gid, docs]) => {
+    const flat = docsMercadoFlat(docs);
+    const completo = SUCURSALES_MERCADO.every(s => AREAS_MERCADO[s].every(a => docs[s] && docs[s][a]));
+    const todosEntregados = completo && flat.every(d => d.estado === 'entregado');
+    const entregadoPor = flat.map(d => d.entregadoPor).find(Boolean) || '';
+    const items = fusionarItemsMercado(docs);
+    const rp = resumenPrecioMercado(gid, items);
+    return `
+    <div class="pedido-card" id="mcard-desp-${gid}">
+      <div class="pedido-header">
+        <div class="pedido-header-top">
+          <span class="pedido-hora">🕐 Entregó: ${entregadoPor}</span>
+          <span class="badge entregado">En espera de confirmación</span>
+        </div>
+        <span class="pedido-sucursal">🏪 Mercado</span>
+      </div>
+      <button class="btn-excel" style="margin-bottom:8px" onclick="descargarExcelMercado('${gid}')">⬇ Descargar Excel</button>
+      <button class="btn-precios" onclick="abrirPreciosMercado('${gid}')">
+        💰 ${rp.cargado ? `Bs ${rp.total.toFixed(2)} — ${rp.completos}/${rp.totalItems} con precio` : 'Cargar precios'}
+      </button>
+      <div class="nombres-box">
+        ${SUCURSALES_MERCADO.map(s => AREAS_MERCADO[s].map(a => {
+          const d = docs[s] && docs[s][a];
+          const etiqueta = a === '_unica' ? s : `${s} (${a})`;
+          return `
+          <div class="nombre-row">
+            <span class="nombre-lbl">${ICONOS_MERCADO[s]} ${etiqueta}:</span>
+            <span class="nombre-val">${d && d.estado === 'completado' ? '✓ Recibido — ' + (d.recibidoPor || '') : '⏳ Esperando confirmación'}</span>
+          </div>`;
+        }).join('')).join('')}
+      </div>
+      ${todosEntregados ? `<div class="acciones"><button class="btn-deshacer" onclick="deshacerEntregaMercado('${gid}')">↩ Deshacer entrega</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+window.deshacerEntregaMercado = async function(gid) {
+  const docs = gruposMercadoPersistidos()[gid];
+  if (!docs) return;
+  const ids = docsMercadoFlat(docs).map(d => d.id).filter(Boolean);
+  await Promise.all(ids.map(id => updateDoc(doc(db, 'pedidosMercado', id), {
+    estado: 'pendiente', entregadoPor: '', fechaEntrega: null, grupoMercado: null
+  })));
+  mostrarToast('Entrega deshecha');
+};
+
+// ── ENTREGAS ──
+function renderEntregasMercado() {
+  const lista = document.getElementById('mercadoLista');
+  const grupos = gruposMercadoPersistidos();
+  const completos = Object.entries(grupos).filter(([gid, docs]) => {
+    const flat = docsMercadoFlat(docs);
+    const totalEsperado = SUCURSALES_MERCADO.reduce((acc, s) => acc + AREAS_MERCADO[s].length, 0);
+    return flat.length === totalEsperado && flat.every(d => d.estado === 'completado');
+  });
+  if (!completos.length) { lista.innerHTML = `<div class="sin-pedidos"><span class="orn-v">📭</span><p>Sin entregas completadas</p></div>`; return; }
+  lista.innerHTML = completos.map(([gid, docs]) => {
+    const items = fusionarItemsMercado(docs);
+    const rp = resumenPrecioMercado(gid, items);
+    const flat = docsMercadoFlat(docs);
+    const docMasReciente = flat.reduce((max, d) => tsToDate(d.timestamp) > tsToDate(max.timestamp) ? d : max, flat[0]);
+    return `
+    <div class="entrega-simple entrega-hiper" id="mcard-ent-${gid}">
+      <div class="es-info">
+        <span class="es-suc">🏪 Mercado — Beni + Alemana + Zoológico + Galpón</span>
+        <span class="es-fecha">🕐 ${formatFecha(docMasReciente ? docMasReciente.timestamp : null)}</span>
+        <span class="es-precio">${rp.cargado ? `💰 Bs ${rp.total.toFixed(2)} — ${rp.completos}/${rp.totalItems} con precio` : '💰 Sin precios cargados'}</span>
+      </div>
+      <div class="es-btns">
+        <button class="btn-precios" onclick="abrirPreciosMercado('${gid}')">💰</button>
+        <button class="es-dl" onclick="descargarExcelMercado('${gid}')">↓ Excel</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarContadoresMercado() {
+  const grupo  = agruparMercadoPorSucursal('pendiente');
+  const grupos = gruposMercadoPersistidos();
+  const enDespacho = Object.entries(grupos).filter(([gid, docs]) => docsMercadoFlat(docs).some(d => d.estado === 'entregado')).length;
+  document.getElementById('mcountPedido').textContent = grupo.completo ? 1 : 0;
+  const cD = document.getElementById('mcountDespachos');
+  if (enDespacho > 0) { cD.textContent = enDespacho; cD.style.display = 'inline-block'; }
+  else { cD.style.display = 'none'; }
+}
+
+// ── CARGAR PRECIOS ──
+function buildPreciosOverlayMercado(gid) {
+  const docs  = resolverDocsMercado(gid);
+  const items = fusionarItemsMercado(docs);
+  const cache = preciosMercadoCache[gid] || {};
+  const guardados = cache.precios || {};
+  const montoGuardado = cache.montoEntregado != null ? cache.montoEntregado : '';
+  const estacGuardado = cache.estacionamiento != null ? cache.estacionamiento : '';
+  const totalProductos = items.reduce((acc, it) => acc + ((Number(guardados[it.nombre]) || 0) * it.total), 0);
+  const totalInicial = totalProductos + (Number(estacGuardado) || 0);
+  const cambioInicial = montoGuardado !== '' ? (Number(montoGuardado) - totalInicial) : null;
+
+  return `
+    <div class="pf-topbar">
+      <button class="pf-close" onclick="cerrarPreciosMercado()">← Volver</button>
+      <span class="pf-badge">💰 Precios</span>
+    </div>
+    <div class="pf-body">
+      <div class="pf-info">
+        <span class="pf-hora">🏪 Mercado — Beni + Alemana + Zoológico + Galpón</span>
+      </div>
+      <p style="color:var(--mut);font-size:14px;margin-bottom:16px">
+        Cargá cuánto costó cada producto. El total se calcula solo, y se guarda apenas toqués "Guardar".
+      </p>
+      <div class="monto-entregado-row">
+        <span class="precio-nombre">Monto entregado para la compra <span style="color:var(--mut);font-weight:400;font-size:12px">(opcional)</span></span>
+        <div class="precio-input-wrap">
+          <span class="precio-simb">Bs</span>
+          <input type="number" step="0.01" min="0" class="precio-input monto-entregado-input" id="mMontoEntregado"
+                 value="${montoGuardado}" placeholder="0.00" oninput="recalcularPrecioTotalMercado()">
+        </div>
+      </div>
+      <div class="precio-fijo-row">
+        <div class="precio-info">
+          <span class="precio-nombre">🅿️ Estacionamiento</span>
+          <span class="precio-cant" style="font-style:italic">gasto fijo del viaje (opcional)</span>
+        </div>
+        <div class="precio-input-wrap">
+          <span class="precio-simb">Bs</span>
+          <input type="number" step="0.01" min="0" class="precio-input estacionamiento-input" id="mEstacionamiento"
+                 value="${estacGuardado}" placeholder="0.00" oninput="recalcularPrecioTotalMercado()">
+        </div>
+      </div>
+      <div class="precios-lista">
+        ${items.map((it, idx) => {
+          const pu = guardados[it.nombre] || '';
+          const sub = (Number(pu) || 0) * it.total;
+          return `
+          <div class="precio-row">
+            <div class="precio-info">
+              <span class="precio-nombre">${it.nombre}</span>
+              <span class="precio-cant">×${it.total} ${it.unidad}</span>
+            </div>
+            <div class="precio-input-wrap">
+              <span class="precio-simb">Bs</span>
+              <input type="number" step="0.01" min="0" class="precio-input" id="mpinput-${idx}"
+                     data-nombre="${it.nombre.replace(/"/g, '&quot;')}" data-cant="${it.total}"
+                     value="${pu}" placeholder="0.00" oninput="recalcularPrecioTotalMercado()">
+            </div>
+            <span class="precio-subtotal" id="mpsub-${idx}">Bs ${sub.toFixed(2)}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="precio-total-box">
+        <span>TOTAL</span>
+        <span id="precioTotalGeneralMercado">Bs ${totalInicial.toFixed(2)}</span>
+      </div>
+      <div class="precio-cambio-box" id="precioCambioBoxMercado" style="display:${cambioInicial != null ? 'flex' : 'none'}">
+        <span>CAMBIO</span>
+        <span id="precioCambioGeneralMercado">Bs ${(cambioInicial || 0).toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="pf-footer">
+      <button class="pf-btn-confirmar" onclick="guardarPreciosMercado('${gid}')">Guardar precios</button>
+    </div>`;
+}
+
+window.abrirPreciosMercado = function(gid) {
+  const overlay = document.createElement('div');
+  overlay.className = 'pedido-full-overlay';
+  overlay.id = 'preciosMercadoOverlay';
+  overlay.dataset.gid = gid;
+  overlay.innerHTML = buildPreciosOverlayMercado(gid);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+};
+
+window.cerrarPreciosMercado = function() {
+  const o = document.getElementById('preciosMercadoOverlay');
+  if (o) o.remove();
+  document.body.style.overflow = '';
+};
+
+window.recalcularPrecioTotalMercado = function() {
+  let total = 0;
+  document.querySelectorAll('#preciosMercadoOverlay .precios-lista .precio-input').forEach((inp, idx) => {
+    const cant = Number(inp.dataset.cant) || 0;
+    const pu   = Number(inp.value) || 0;
+    const sub  = cant * pu;
+    total += sub;
+    const subEl = document.getElementById('mpsub-' + idx);
+    if (subEl) subEl.textContent = 'Bs ' + sub.toFixed(2);
+  });
+  const estacInp = document.getElementById('mEstacionamiento');
+  total += Number(estacInp && estacInp.value) || 0;
+
+  const totEl = document.getElementById('precioTotalGeneralMercado');
+  if (totEl) totEl.textContent = 'Bs ' + total.toFixed(2);
+
+  const montoInp = document.getElementById('mMontoEntregado');
+  const cambioBox = document.getElementById('precioCambioBoxMercado');
+  const cambioEl = document.getElementById('precioCambioGeneralMercado');
+  const montoVal = montoInp ? montoInp.value : '';
+  if (montoVal !== '' && cambioBox && cambioEl) {
+    cambioBox.style.display = 'flex';
+    cambioEl.textContent = 'Bs ' + (Number(montoVal) - total).toFixed(2);
+  } else if (cambioBox) {
+    cambioBox.style.display = 'none';
+  }
+};
+
+window.guardarPreciosMercado = async function(gid) {
+  const precios = {};
+  document.querySelectorAll('#preciosMercadoOverlay .precios-lista .precio-input').forEach(inp => {
+    const val = Number(inp.value);
+    if (val > 0) precios[inp.dataset.nombre] = val;
+  });
+  const montoInp = document.getElementById('mMontoEntregado');
+  const estacInp = document.getElementById('mEstacionamiento');
+  const montoVal = montoInp && montoInp.value !== '' ? Number(montoInp.value) : null;
+  const estacVal = estacInp && estacInp.value !== '' ? Number(estacInp.value) : null;
+  try {
+    await setDoc(doc(db, 'precios_mercado', gid), { precios, montoEntregado: montoVal, estacionamiento: estacVal, actualizado: serverTimestamp() }, { merge: true });
+    mostrarToast('✦ Precios guardados');
+    cerrarPreciosMercado();
+  } catch (e) {
+    console.error(e);
+    mostrarToast('Error al guardar precios');
+  }
+};
+
+// ── EXCEL MERCADO (mismo formato de la planilla LISTA DE PEDIDOS DE MERCADO) ──
+function resolverDocsMercado(gid) {
+  const grupos = gruposMercadoPersistidos();
+  if (grupos[gid]) return grupos[gid];
+  // El gid trae 7 ids (Beni, Alemana, Zoológico × 2 áreas + Galpón × 1), en
+  // el mismo orden en que los arma agruparMercadoPorSucursal: sucursal × área.
+  const ids = gid.split('__');
+  const docs = {};
+  let i = 0;
+  SUCURSALES_MERCADO.forEach(suc => {
+    AREAS_MERCADO[suc].forEach(area => {
+      const p = pedidosMercado.find(x => x.id === ids[i]);
+      if (p) { if (!docs[suc]) docs[suc] = {}; docs[suc][area] = p; }
+      i++;
+    });
+  });
+  return docs;
+}
+
+window.descargarExcelMercado = async function(gid) {
+  const docs  = resolverDocsMercado(gid);
+  const items = fusionarItemsMercado(docs);
+  if (!items.length) { mostrarToast('No hay datos para exportar'); return; }
+  const cache = preciosMercadoCache[gid] || {};
+  const precios = { ...(cache.precios || {}) };
+  const notas   = cache.notas || {};
+  const montoEntregado  = cache.montoEntregado != null ? cache.montoEntregado : null;
+  const estacionamiento = cache.estacionamiento != null ? cache.estacionamiento : null;
+
+  // El estacionamiento no lo pide ninguna sucursal puntual — se agrega como
+  // una fila más de la tabla (cantidad 1) para que entre solo en la suma del total.
+  const itemsParaExcel = [...items];
+  if (estacionamiento != null && estacionamiento > 0) {
+    itemsParaExcel.push({
+      nombre: 'Estacionamiento', unidad: 'Servicio', total: 1,
+      porSucursal: { Beni: 0, Alemana: 0, 'Zoológico': 0, 'Galpón': 0 }, observaciones: []
+    });
+    precios['Estacionamiento'] = estacionamiento;
+  }
+
+  await generarExcelMercado(itemsParaExcel, precios, notas, montoEntregado, docs);
+  mostrarToast('✦ Excel descargado');
+};
+
+async function generarExcelMercado(items, precios, notas, montoEntregado, docs) {
+  precios = precios || {}; notas = notas || {}; docs = docs || {};
+  const wb = new ExcelJS.Workbook();
+  wb.calcProperties.fullCalcOnLoad = true;
+  const ws = wb.addWorksheet('Lista Mercado', { pageSetup: { fitToPage: true, fitToWidth: 1 } });
+
+  const ROJO = { argb: 'FFCC0000' };
+  const GRIS = { argb: 'FFE0E0E0' };
+  const sf = c => ({ type: 'pattern', pattern: 'solid', fgColor: c });
+  const bT = { style: 'thin', color: { argb: 'FF000000' } };
+  const allT = { top: bT, bottom: bT, left: bT, right: bT };
+
+  ws.columns = [
+    { width: 3 }, { width: 26 }, { width: 8 },
+    { width: 8 }, { width: 8 },   // ZOO, check
+    { width: 8 }, { width: 8 },   // BENI, check
+    { width: 8 }, { width: 8 },   // ALE, check
+    { width: 8 }, { width: 8 },   // GALPON, check
+    { width: 8 }, { width: 8 }, { width: 10 },
+    { width: 22 }, { width: 22 }
+  ]; // A(-) B(Producto) C(unidad) D(ZOO) E(check) F(BENI) G(check) H(ALE) I(check) J(GALPON) K(check) L(total) M(P.U.) N(P.Total) O(Observaciones) P(Nota Almacén)
+
+  ws.mergeCells('B3:K3');
+  const t = ws.getCell('B3');
+  t.value = 'LISTA DE PEDIDOS DE MERCADO'; t.font = { bold: true, size: 16, name: 'Arial' };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+
+  const flatDocsMerc = docsMercadoFlat(docs);
+  const fechaMasRecienteM = Math.max(...flatDocsMerc.map(d => tsToDate(d.timestamp).getTime()));
+  ws.mergeCells('L3:P3');
+  const fcM = ws.getCell('L3');
+  fcM.value = 'Fecha: ' + (isFinite(fechaMasRecienteM) ? new Date(fechaMasRecienteM).toLocaleDateString('es-BO') : '—');
+  fcM.font = { bold: true, size: 11, name: 'Arial' };
+  fcM.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  ws.mergeCells('D5:E5'); ws.getCell('D5').value = 'Stock'; ws.getCell('D5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('D5').alignment = { horizontal: 'center' };
+  ws.mergeCells('F5:G5'); ws.getCell('F5').value = 'Stock'; ws.getCell('F5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('F5').alignment = { horizontal: 'center' };
+  ws.mergeCells('H5:I5'); ws.getCell('H5').value = 'Stock'; ws.getCell('H5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('H5').alignment = { horizontal: 'center' };
+  ws.mergeCells('J5:K5'); ws.getCell('J5').value = 'Stock'; ws.getCell('J5').font = { bold: true, size: 9, color: ROJO }; ws.getCell('J5').alignment = { horizontal: 'center' };
+
+  const hdr6 = ['', 'PRODUCTO', '', 'ZOO', 'check', 'BENI', 'check', 'ALE', 'check', 'GALPO', 'check', 'total', 'P.U.', 'P. Total', 'Observaciones', 'NOTA ALMACÉN'];
+  hdr6.forEach((h, i) => {
+    if (!h) return;
+    const c = ws.getRow(6).getCell(i + 1);
+    c.value = h; c.font = { bold: true, size: 9, name: 'Arial' };
+    c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    c.border = allT; c.fill = sf(GRIS);
+  });
+
+  let r = 7;
+  let totalGeneral = 0;
+  items.forEach(it => {
+    ws.getCell(`B${r}`).value = it.nombre;
+    ws.getCell(`C${r}`).value = it.unidad;
+    ws.getCell(`D${r}`).value = it.porSucursal['Zoológico'] || 0;
+    ws.getCell(`F${r}`).value = it.porSucursal.Beni || 0;
+    ws.getCell(`H${r}`).value = it.porSucursal.Alemana || 0;
+    ws.getCell(`J${r}`).value = it.porSucursal['Galpón'] || 0;
+    ws.getCell(`L${r}`).value = it.total;
+    const pu = precios[it.nombre];
+    if (pu != null) {
+      const pTotal = it.total * pu;
+      ws.getCell(`M${r}`).value = pu;
+      ws.getCell(`N${r}`).value = { formula: `L${r}*M${r}`, result: pTotal };
+      totalGeneral += pTotal;
+    }
+    ws.getCell(`O${r}`).value = it.observaciones.join(' · ');
+    ws.getCell(`P${r}`).value = notas[it.nombre] || '';
+    ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'].forEach(col => {
+      const c = ws.getCell(`${col}${r}`);
+      c.border = allT; c.font = { size: 9, name: 'Arial' };
+      c.alignment = { horizontal: col === 'B' ? 'left' : 'center', vertical: 'middle' };
+    });
+    r++;
+  });
+
+  const filaDatosFin = r - 1;
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'TOTAL'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`N${r}`).value = { formula: `SUM(N7:N${filaDatosFin})`, result: totalGeneral }; ws.getCell(`N${r}`).font = { bold: true, size: 10 }; ws.getCell(`N${r}`).border = allT;
+
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'MONTO ENTREGA'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  if (montoEntregado != null) ws.getCell(`N${r}`).value = montoEntregado;
+  ws.getCell(`N${r}`).border = allT;
+  const filaMonto = r;
+
+  r += 1;
+  ws.mergeCells(`J${r}:K${r}`);
+  ws.getCell(`J${r}`).value = 'CAMBIO'; ws.getCell(`J${r}`).font = { bold: true, size: 10 }; ws.getCell(`J${r}`).alignment = { horizontal: 'right' };
+  ws.getCell(`N${r}`).value = { formula: `N${filaMonto}-N${filaMonto - 1}`, result: montoEntregado != null ? (montoEntregado - totalGeneral) : 0 };
+  ws.getCell(`N${r}`).fill = sf(GRIS); ws.getCell(`N${r}`).border = allT;
+
+  r += 2;
+  SUCURSALES_MERCADO.forEach(s => {
+    AREAS_MERCADO[s].forEach(a => {
+      const d = docs[s] && docs[s][a];
+      const etiqueta = a === '_unica' ? s : `${s} (${a})`;
+      const c = ws.getCell(`B${r}`);
+      c.value = `Recibió ${etiqueta}: ${(d && d.recibidoPor) || '________________________'}`;
+      c.font = { size: 10, name: 'Arial' };
+      r++;
+    });
+  });
+  r += 1;
+  const entregadoPorMerc = flatDocsMerc.map(d => d.entregadoPor).find(Boolean) || '________________________';
+  const ecM = ws.getCell(`B${r}`);
+  ecM.value = `Entregó Conforme: ${entregadoPorMerc}`;
+  ecM.font = { bold: true, size: 10, name: 'Arial' };
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'lista_mercado_' + new Date().toLocaleDateString('es-BO').replace(/\//g, '-') + '.xlsx'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── FIREBASE ──
+const q = query(collection(db,'pedidos'), orderBy('timestamp','desc'));
+onSnapshot(q, snap => {
+  const antesP = pedidos.filter(p=>p.estado==='pendiente' && esDiario(p)).length;
+  pedidos = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const ahoraP = pedidos.filter(p=>p.estado==='pendiente' && esDiario(p)).length;
+  if (ahoraP > antesP) mostrarToast('🔔 Nuevo pedido de la barra');
+  actualizarContadores();
+  renderVista();
+  renderVistaHiper();
+
+  // Sincronizar pantalla completa si está abierta
+  const full = document.getElementById('pedidoFullOverlay');
+  if (full) {
+    const pid = full.dataset.pid;
+    const p = pedidos.find(x => x.id === pid && x.estado === 'pendiente');
+    if (p) {
+      const nombreVal = (document.getElementById('nomEntFull-'+pid) || {}).value || '';
+      full.innerHTML = buildFullPantalla(p);
+      const inp = document.getElementById('nomEntFull-'+pid);
+      if (inp) inp.value = nombreVal;
+    } else {
+      cerrarPantallaCompleta();
+    }
+  }
+});
+</script>
+</body>
+</html>
